@@ -476,19 +476,17 @@ enum GameRenderer {
         }
     }
 
-    /// Flower-petal outline: broad rounded top with a small notch, tapering to a point at the bottom.
+    /// Leaf outline (pointed tip, curved sides), centred on the origin so it drops into place like the old shapes.
     static func dropPath(_ s: CGFloat) -> Path {
-        var d = Path()
-        d.move(to: CGPoint(x: 0, y: 24 * s))
-        d.addCurve(to: CGPoint(x: 9 * s, y: -22 * s), control1: CGPoint(x: 13 * s, y: 10 * s), control2: CGPoint(x: 19 * s, y: -10 * s))
-        d.addCurve(to: CGPoint(x: 0, y: -22 * s), control1: CGPoint(x: 6 * s, y: -26 * s), control2: CGPoint(x: 2.5 * s, y: -25 * s))
-        d.addCurve(to: CGPoint(x: -9 * s, y: -22 * s), control1: CGPoint(x: -2.5 * s, y: -25 * s), control2: CGPoint(x: -6 * s, y: -26 * s))
-        d.addCurve(to: CGPoint(x: 0, y: 24 * s), control1: CGPoint(x: -19 * s, y: -10 * s), control2: CGPoint(x: -13 * s, y: 10 * s))
-        d.closeSubpath()
-        return d
+        leafPath(Double(52 * s)).applying(CGAffineTransform(translationX: 0, y: 26 * s))
     }
 
-    /// A falling petal drop: teardrop with a glossy highlight. Hold notes get an extra inner outline.
+    /// Midrib and veins for the same leaf.
+    static func dropVeins(_ s: CGFloat) -> Path {
+        leafVeins(Double(52 * s)).applying(CGAffineTransform(translationX: 0, y: 26 * s))
+    }
+
+    /// A falling leaf: shaded body, white outline and veins. Hold notes get an extra inner outline.
     static func drawSeed(_ ctx: inout GraphicsContext, at p: CGPoint, r: CGFloat, color: RGB, alpha: Double, hold: Bool) {
         var g = ctx
         g.translateBy(x: p.x, y: p.y)
@@ -505,10 +503,8 @@ enum GameRenderer {
                               color.mixed(RGB(0, 0, 0), 0.38).color.opacity(alpha)]),
             center: CGPoint(x: -6, y: -6), startRadius: 1, endRadius: 34))
         g.stroke(drop(1), with: .color(.white.opacity(0.92 * alpha)), style: StrokeStyle(lineWidth: hold ? 3.6 : 2.6, lineJoin: .round))
-        var gloss = Path()
-        gloss.move(to: CGPoint(x: -8, y: -11))
-        gloss.addQuadCurve(to: CGPoint(x: -4, y: 11), control: CGPoint(x: -13, y: 0))
-        g.stroke(gloss, with: .color(.white.opacity(0.6 * alpha)), style: StrokeStyle(lineWidth: 3.2, lineCap: .round))
+        g.stroke(GameRenderer.dropVeins(1), with: .color(.white.opacity(0.62 * alpha)),
+                 style: StrokeStyle(lineWidth: 2.2, lineCap: .round))
         if hold {
             g.stroke(drop(0.55), with: .color(.white.opacity(0.6 * alpha)), lineWidth: 2)
         }

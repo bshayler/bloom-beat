@@ -39,11 +39,11 @@ func leafVeins(_ len: Double) -> Path {
     for f in [0.28, 0.48, 0.68] {
         let y = -f * L
         let x = 0.012 * L * (f * 4)
-        let reach = (0.30 - 0.18 * f) * L
+        let reach = (0.30 - 0.28 * f) * L
         v.move(to: CGPoint(x: x, y: y))
-        v.addQuadCurve(to: CGPoint(x: x + reach, y: y - 0.16 * L), control: CGPoint(x: x + reach * 0.5, y: y - 0.03 * L))
+        v.addQuadCurve(to: CGPoint(x: x + reach, y: y - 0.14 * L), control: CGPoint(x: x + reach * 0.5, y: y - 0.03 * L))
         v.move(to: CGPoint(x: x, y: y))
-        v.addQuadCurve(to: CGPoint(x: x - reach, y: y - 0.16 * L), control: CGPoint(x: x - reach * 0.5, y: y - 0.03 * L))
+        v.addQuadCurve(to: CGPoint(x: x - reach, y: y - 0.14 * L), control: CGPoint(x: x - reach * 0.5, y: y - 0.03 * L))
     }
     return v
 }
