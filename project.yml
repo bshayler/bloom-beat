@@ -1,0 +1,22 @@
+name: Photosynth
+options:
+  bundleIdPrefix: com.photosynth
+  deploymentTarget:
+    iOS: "17.0"
+targets:
+  Photosynth:
+    type: application
+    platform: iOS
+    sources: [Sources]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.photosynth.game
+        SWIFT_VERSION: "5.0"
+        SWIFT_OPTIMIZATION_LEVEL: "-O"
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: "Photosynth"
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        TARGETED_DEVICE_FAMILY: "1"
+        CODE_SIGN_STYLE: Automatic
