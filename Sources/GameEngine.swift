@@ -120,6 +120,8 @@ final class GameEngine: NSObject, ObservableObject {
     var beatSec = 0.5
     var activeHolds: [Int] = []
     var touchHolds: [ObjectIdentifier: Int] = [:]
+    var touchX: [ObjectIdentifier: CGFloat] = [:]   // each finger's position, with perspective undone
+    var slideOff: [Int: Double] = [:]               // time a finger has been off a slide path
 
     // Audio / clock
     var player: AVAudioPlayer?
@@ -204,6 +206,8 @@ final class GameEngine: NSObject, ObservableObject {
         flower = PlantStage.flower(for: r.spec.id)
         activeHolds = []
         touchHolds = [:]
+        touchX = [:]
+        slideOff = [:]
         lanes = diff.lanes
         approach = diff.approach
         layout.lanes = lanes
@@ -312,9 +316,23 @@ final class GameEngine: NSObject, ObservableObject {
         }
         activeHolds.removeAll { !notes[$0].holding }
         for idx in activeHolds {
-            laneGlow[notes[idx].lane] = 1
-            if Double.random(in: 0...1) < 0.5 { holdSpark(lane: notes[idx].lane) }
+            let x = slideX(idx, at: songTime)
+            let lane = layout.lane(atX: x)
+            laneGlow[lane] = 1
+            if Double.random(in: 0...1) < 0.5 { holdSpark(x: x, lane: lane) }
         }
+        // slides: the finger has to stay near the curving vine
+        var dropped: [(ObjectIdentifier, Int)] = []
+        for (id, idx) in touchHolds where notes[idx].holding && notes[idx].slides {
+            guard let fx = touchX[id] else { continue }
+            if abs(fx - slideX(idx, at: songTime)) > layout.laneW * 0.85 {
+                slideOff[idx, default: 0] += dt
+            } else {
+                slideOff[idx] = max(0, (slideOff[idx] ?? 0) - dt * 2)
+            }
+            if (slideOff[idx] ?? 0) > 0.45 { dropped.append((id, idx)) }
+        }
+        for (id, idx) in dropped { failHold(idx); touchHolds.removeValue(forKey: id) }
 
         updateVisuals(dt: dt, now: now)
 
@@ -350,13 +368,33 @@ final class GameEngine: NSObject, ObservableObject {
 
     // MARK: Input
 
+    /// Flat (lane-space) x of a hold's centre at a given time; slides follow a smooth S-curve.
+    func slideX(_ i: Int, at time: Double) -> CGFloat {
+        let n = notes[i]
+        guard n.slides else { return layout.laneX(n.lane) }
+        let p = max(0, min(1, (time - n.time) / n.dur))
+        let sm = CGFloat(p * p * (3 - 2 * p))
+        return layout.laneX(n.lane) + (layout.laneX(n.endLane) - layout.laneX(n.lane)) * sm
+    }
+
+    private func flatX(_ p: CGPoint) -> CGFloat {
+        let cx = layout.size.width / 2
+        return cx + (p.x - cx) / layout.scaleAt(y: p.y)
+    }
+
+    func touchMoved(id: ObjectIdentifier, at p: CGPoint) {
+        if touchHolds[id] != nil { touchX[id] = flatX(p) }
+    }
+
     func touchBegan(id: ObjectIdentifier, at p: CGPoint, timestamp: TimeInterval) {
         guard phase == .playing, p.y > layout.highwayTop - 30 else { return }
+        touchX[id] = flatX(p)
         let idx = tap(lane: layout.lane(at: p), host: timestamp)
         if idx >= 0, notes[idx].isHold { touchHolds[id] = idx }
     }
 
     func touchEnded(id: ObjectIdentifier, timestamp: TimeInterval) {
+        touchX.removeValue(forKey: id)
         guard let idx = touchHolds.removeValue(forKey: id), notes[idx].holding else { return }
         let h = min(timestamp, CACurrentMediaTime())
         let t = lastA + (h - lastHost) - outputLatency - calibration
@@ -431,9 +469,9 @@ final class GameEngine: NSObject, ObservableObject {
         lastJudgmentTime = CACurrentMediaTime()
     }
 
-    func holdSpark(lane: Int) {
+    func holdSpark(x: CGFloat, lane: Int) {
         let c = Palette.laneColor(lane, of: lanes).mixed(RGB(1, 1, 1), 0.5)
-        particles.append(Particle(x: Double(layout.laneX(lane)) + Double.random(in: -14...14), y: Double(layout.hitY),
+        particles.append(Particle(x: Double(x) + Double.random(in: -14...14), y: Double(layout.hitY),
                                   vx: Double.random(in: -20...20), vy: Double.random(in: -150 ... -60),
                                   life: 0.5, maxLife: 0.5, color: c, size: Double.random(in: 4...8),
                                   rot: 0, spin: 4, sparkle: true))

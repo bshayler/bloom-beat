@@ -6,6 +6,10 @@ import UIKit
 final class TouchUIView: UIView {
     var began: ((ObjectIdentifier, CGPoint, TimeInterval) -> Void)?
     var ended: ((ObjectIdentifier, TimeInterval) -> Void)?
+    var moved: ((ObjectIdentifier, CGPoint) -> Void)?
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        for t in touches { moved?(ObjectIdentifier(t), t.location(in: self)) }
+    }
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         for t in touches { began?(ObjectIdentifier(t), t.location(in: self), t.timestamp) }
     }
@@ -20,14 +24,15 @@ final class TouchUIView: UIView {
 struct TouchPad: UIViewRepresentable {
     var began: (ObjectIdentifier, CGPoint, TimeInterval) -> Void
     var ended: (ObjectIdentifier, TimeInterval) -> Void
+    var moved: (ObjectIdentifier, CGPoint) -> Void = { _, _ in }
     func makeUIView(context: Context) -> TouchUIView {
         let v = TouchUIView()
         v.isMultipleTouchEnabled = true
         v.backgroundColor = .clear
-        v.began = began; v.ended = ended
+        v.began = began; v.ended = ended; v.moved = moved
         return v
     }
-    func updateUIView(_ v: TouchUIView, context: Context) { v.began = began; v.ended = ended }
+    func updateUIView(_ v: TouchUIView, context: Context) { v.began = began; v.ended = ended; v.moved = moved }
 }
 
 // MARK: - Game screen
@@ -48,7 +53,8 @@ struct GameView: View {
                     }
                 }
                 TouchPad(began: { id, pt, ts in engine.touchBegan(id: id, at: pt, timestamp: ts) },
-                         ended: { id, ts in engine.touchEnded(id: id, timestamp: ts) })
+                         ended: { id, ts in engine.touchEnded(id: id, timestamp: ts) },
+                         moved: { id, pt in engine.touchMoved(id: id, at: pt) })
 
                 Button {
                     engine.pause()
@@ -329,38 +335,43 @@ enum GameRenderer {
             let sc: CGFloat = n.holding ? 1 : sAt(n.time)
             let y = n.holding ? hitY : yAt(sc)
             if y > size.height + 60 { continue }
-            let x = xAt(L.laneX(n.lane), sc)
+            let flatHead = n.holding ? e.slideX(idx, at: t) : L.laneX(n.lane)
+            let x = xAt(flatHead, sc)
             let r = R * sc
             let alpha = dim ? 0.35 : min(1, Double((y - L.highwayTop) / 30) + 0.25)
 
-            // hold tail (vine) in perspective
+            // hold vine in perspective; slides bend along an S-curve between lanes
             if n.isHold {
-                let sT = sAt(n.end)
-                let yT = yAt(sT)
-                let xT = xAt(L.laneX(n.lane), sT)
                 let tw = R * 0.78
-                if y - yT > 2 {
+                let tStart = max(t, n.time)
+                let samples = 24
+                var pts: [(c: CGPoint, s: CGFloat)] = []
+                for k in 0...samples {
+                    let tau = tStart + (n.end - tStart) * Double(k) / Double(samples)
+                    let sj = sAt(tau)
+                    pts.append((CGPoint(x: xAt(e.slideX(idx, at: tau), sj), y: yAt(sj)), sj))
+                }
+                if let first = pts.first, let last = pts.last, first.c.y - last.c.y > 2 {
                     var tail = Path()
-                    tail.move(to: CGPoint(x: xT - tw * sT / 2, y: yT))
-                    tail.addLine(to: CGPoint(x: xT + tw * sT / 2, y: yT))
-                    tail.addLine(to: CGPoint(x: x + tw * sc / 2, y: y))
-                    tail.addLine(to: CGPoint(x: x - tw * sc / 2, y: y))
+                    tail.move(to: CGPoint(x: pts[0].c.x - tw * pts[0].s / 2, y: pts[0].c.y))
+                    for q in pts.dropFirst() { tail.addLine(to: CGPoint(x: q.c.x - tw * q.s / 2, y: q.c.y)) }
+                    for q in pts.reversed() { tail.addLine(to: CGPoint(x: q.c.x + tw * q.s / 2, y: q.c.y)) }
                     tail.closeSubpath()
                     let pulse = n.holding ? 0.75 + 0.25 * sin(time * 14) : 0.55
-                    clipped.fill(tail, with: .linearGradient(
-                        Gradient(colors: [col.mixed(RGB(0, 0, 0), 0.15).color.opacity(alpha), col.mixed(RGB(1, 1, 1), 0.35).color.opacity(alpha),
-                                          col.mixed(RGB(0, 0, 0), 0.15).color.opacity(alpha)]),
-                        startPoint: CGPoint(x: x - tw * sc / 2, y: 0), endPoint: CGPoint(x: x + tw * sc / 2, y: 0)))
-                    clipped.stroke(tail, with: .color(.white.opacity(pulse * alpha)), lineWidth: 2 * max(0.5, sc))
-                    let len = y - yT
-                    let count = max(1, Int(len / (30 * (sc + sT) / 2)))
-                    for jj in 0..<count {
-                        let f = (CGFloat(jj) + 0.5) / CGFloat(count)
-                        let sj = sc + (sT - sc) * f
-                        let side: CGFloat = jj % 2 == 0 ? 1 : -1
+                    clipped.fill(tail, with: .color(col.mixed(RGB(1, 1, 1), 0.12).color.opacity(alpha)))
+                    var core = Path()
+                    core.move(to: pts[0].c)
+                    for q in pts.dropFirst() { core.addLine(to: q.c) }
+                    clipped.stroke(core, with: .color(col.mixed(RGB(1, 1, 1), 0.55).color.opacity(alpha * 0.8)),
+                                   style: StrokeStyle(lineWidth: tw * 0.32 * (first.s + last.s) / 2, lineCap: .round, lineJoin: .round))
+                    clipped.stroke(tail, with: .color(.white.opacity(pulse * alpha)),
+                                   style: StrokeStyle(lineWidth: 2 * max(0.5, sc), lineJoin: .round))
+                    for jj in stride(from: 2, to: samples - 1, by: 3) {
+                        let q = pts[jj]
+                        let side: CGFloat = (jj / 3) % 2 == 0 ? 1 : -1
                         var lc = clipped
-                        lc.translateBy(x: xAt(L.laneX(n.lane), sj) + side * tw * sj * 0.4, y: yAt(sj))
-                        lc.scaleBy(x: sj, y: sj)
+                        lc.translateBy(x: q.c.x + side * tw * q.s * 0.4, y: q.c.y)
+                        lc.scaleBy(x: q.s, y: q.s)
                         lc.rotate(by: .radians(Double(side)))
                         var lp = Path()
                         lp.move(to: .zero)
@@ -368,10 +379,11 @@ enum GameRenderer {
                         lp.addQuadCurve(to: .zero, control: CGPoint(x: -7, y: -5))
                         lc.fill(lp, with: .color(RGB(0.42, 0.85, 0.40).color.opacity(alpha * 0.9)))
                     }
-                    if yT > L.highwayTop - 10 {
-                        clipped.fill(Path(ellipseIn: CGRect(x: xT - tw * sT * 0.62, y: yT - tw * sT * 0.62, width: tw * sT * 1.24, height: tw * sT * 1.24)),
+                    if last.c.y > L.highwayTop - 10 {
+                        clipped.fill(Path(ellipseIn: CGRect(x: last.c.x - tw * last.s * 0.62, y: last.c.y - tw * last.s * 0.62,
+                                                            width: tw * last.s * 1.24, height: tw * last.s * 1.24)),
                                      with: .radialGradient(Gradient(colors: [col.mixed(RGB(1, 1, 1), 0.7).color.opacity(alpha), col.color.opacity(alpha)]),
-                                                           center: CGPoint(x: xT - 2, y: yT - 2), startRadius: 1, endRadius: tw * sT))
+                                                           center: CGPoint(x: last.c.x - 2, y: last.c.y - 2), startRadius: 1, endRadius: tw * last.s))
                     }
                     if n.holding {
                         clipped.fill(Path(ellipseIn: CGRect(x: x - R * 1.7, y: hitY - R * 1.7, width: R * 3.4, height: R * 3.4)),

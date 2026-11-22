@@ -396,6 +396,8 @@ struct GNote {
     var holdDone = false
     var holdFailed = false
     var partner = -1             // index of a simultaneous (chord) note
+    var endLane = -1             // >= 0: a slide hold that curves to this lane
+    var slides: Bool { endLane >= 0 && endLane != lane }
     var isHold: Bool { dur > 0 }
     var end: Double { time + dur }
 }
@@ -432,6 +434,26 @@ enum ChartBuilder {
         out.sort { $0.time < $1.time }
         for i in out.indices {
             for j in out.indices where j != i && abs(out[j].time - out[i].time) < 0.001 { out[i].partner = j }
+        }
+
+        // long holds with no chord partner become slides that bend into another lane
+        if lanes >= 3 {
+            var holdCount = 0
+            for i in out.indices where out[i].isHold && out[i].dur >= 0.7 && out[i].partner < 0 {
+                holdCount += 1
+                if holdCount % 3 == 0 { continue }          // keep every third hold straight
+                let lane = out[i].lane
+                let t0 = out[i].time - 0.05, t1 = out[i].end + 0.25
+                // prefer a two-lane sweep towards the middle, then one lane either way
+                let mid = (lanes - 1) / 2
+                let toward = lane < mid ? 1 : (lane > mid ? -1 : (i % 2 == 0 ? 1 : -1))
+                for step in [2 * toward, 1 * toward, -1 * toward, -2 * toward] {
+                    let target = lane + step
+                    guard target >= 0, target < lanes, target != lane else { continue }
+                    let clash = out.indices.contains { j in j != i && out[j].lane == target && out[j].time < t1 && out[j].end > t0 }
+                    if !clash { out[i].endLane = target; break }
+                }
+            }
         }
         return out
     }
