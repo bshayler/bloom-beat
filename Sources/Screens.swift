@@ -97,9 +97,13 @@ struct MenuView: View {
 
                     PlantPreview(cycle: true).frame(height: 250)
 
-                    sectionTitle("Pick a song")
-                    VStack(spacing: 8) {
-                        ForEach(Array(engine.songs.enumerated()), id: \.offset) { idx, s in songRow(idx, s) }
+                    ForEach(["Originals", "Classical", "Folk & nursery"], id: \.self) { g in
+                        sectionTitle(g == "Originals" ? "Songs · originals" : "Songs · " + g.lowercased())
+                        VStack(spacing: 8) {
+                            ForEach(Array(engine.songs.enumerated()).filter { $0.element.group == g }, id: \.offset) { idx, s in
+                                songRow(idx, s)
+                            }
+                        }
                     }
 
                     sectionTitle("Number of tracks")

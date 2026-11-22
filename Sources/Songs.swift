@@ -19,6 +19,7 @@ struct SongSpec: Identifiable {
     var kind: Kind = .generated
     var leadDecay: Double = 3.2
     var tune = ""
+    var group = "Originals"
 
     enum Kind { case generated, mountainKing, bumblebee, tune }
 
@@ -45,42 +46,81 @@ struct SongSpec: Identifiable {
                  bpm: 120, root: 59,  seed: 0,
                  chords: [Chord(root: 0, intervals: minT), Chord(root: 0, intervals: minT),
                           Chord(root: 7, intervals: majT), Chord(root: 0, intervals: minT)],
-                 maxRhythm: 7, kickBeats: [0, 2], hatStep: 1, kind: .mountainKing, leadDecay: 5),
+                 maxRhythm: 7, kickBeats: [0, 2], hatStep: 1, kind: .mountainKing, leadDecay: 5, group: "Classical"),
         SongSpec(id: "bee", title: "Flight of the Bumblebee", blurb: "Rimsky-Korsakov, 1900 · public domain", emoji: "🐝",
                  bpm: 138, root: 57, seed: 0,
                  chords: [Chord(root: 0, intervals: minT), Chord(root: 7, intervals: majT),
                           Chord(root: 0, intervals: minT), Chord(root: 5, intervals: minT)],
-                 maxRhythm: 7, kickBeats: [0, 2], hatStep: 0.5, kind: .bumblebee, leadDecay: 7),
+                 maxRhythm: 7, kickBeats: [0, 2], hatStep: 0.5, kind: .bumblebee, leadDecay: 7, group: "Classical"),
         SongSpec(id: "ode", title: "Ode to Joy", blurb: "Beethoven, 1824 · public domain", emoji: "🎻",
                  bpm: 108, root: 60,  seed: 0,
                  chords: [Chord(root: 0, intervals: majT), Chord(root: 7, intervals: majT),
                           Chord(root: 0, intervals: majT), Chord(root: 5, intervals: majT)],
                  maxRhythm: 4, kickBeats: [0, 2], hatStep: 1, kind: .tune, leadDecay: 3,
-                 tune: SongSpec.odeToJoy),
+                 tune: SongSpec.odeToJoy, group: "Classical"),
         SongSpec(id: "twinkle", title: "Twinkle Twinkle Little Star", blurb: "Traditional · public domain", emoji: "⭐",
                  bpm: 100, root: 60, seed: 0,
                  chords: [Chord(root: 0, intervals: majT), Chord(root: 5, intervals: majT),
                           Chord(root: 0, intervals: majT), Chord(root: 7, intervals: majT)],
                  maxRhythm: 4, kickBeats: [0, 2], hatStep: 1, kind: .tune, leadDecay: 3,
-                 tune: SongSpec.twinkle),
+                 tune: SongSpec.twinkle, group: "Folk & nursery"),
         SongSpec(id: "jingle", title: "Jingle Bells", blurb: "Pierpont, 1857 · public domain", emoji: "🔔",
                  bpm: 120, root: 60, seed: 0,
                  chords: [Chord(root: 0, intervals: majT), Chord(root: 5, intervals: majT),
                           Chord(root: 0, intervals: majT), Chord(root: 7, intervals: majT)],
                  maxRhythm: 5, kickBeats: [0, 2], hatStep: 0.5, kind: .tune, leadDecay: 4,
-                 tune: SongSpec.jingleBells),
+                 tune: SongSpec.jingleBells, group: "Folk & nursery"),
         SongSpec(id: "saints", title: "When the Saints Go Marching In", blurb: "Traditional · public domain", emoji: "🎺",
                  bpm: 132, root: 60, seed: 0,
                  chords: [Chord(root: 0, intervals: majT), Chord(root: 0, intervals: majT),
                           Chord(root: 5, intervals: majT), Chord(root: 7, intervals: majT)],
                  maxRhythm: 6, kickBeats: [0, 1.5, 2], hatStep: 0.5, kind: .tune, leadDecay: 4,
-                 tune: SongSpec.saints),
+                 tune: SongSpec.saints, group: "Folk & nursery"),
         SongSpec(id: "mary", title: "Mary Had a Little Lamb", blurb: "Traditional · public domain", emoji: "🐑",
                  bpm: 104, root: 60, seed: 0,
                  chords: [Chord(root: 0, intervals: majT), Chord(root: 7, intervals: majT),
                           Chord(root: 0, intervals: majT), Chord(root: 5, intervals: majT)],
                  maxRhythm: 4, kickBeats: [0, 2], hatStep: 1, kind: .tune, leadDecay: 3,
-                 tune: SongSpec.mary)
+                 tune: SongSpec.mary, group: "Folk & nursery"),
+        SongSpec(id: "moon", title: "Moonlit Meadow", blurb: "Dreamy and slow", emoji: "🌙",
+                 bpm: 84, root: 62, seed: 51,
+                 chords: [Chord(root: 0, intervals: majT), Chord(root: 9, intervals: minT),
+                          Chord(root: 5, intervals: majT), Chord(root: 7, intervals: majT)],
+                 maxRhythm: 3, kickBeats: [0], hatStep: 1, leadDecay: 2.2),
+        SongSpec(id: "firefly", title: "Firefly Rush", blurb: "Quick and twinkly", emoji: "✨",
+                 bpm: 148, root: 64, seed: 63,
+                 chords: [Chord(root: 9, intervals: minT), Chord(root: 5, intervals: majT),
+                          Chord(root: 0, intervals: majT), Chord(root: 7, intervals: majT)],
+                 maxRhythm: 7, kickBeats: [0, 1, 2, 3], hatStep: 0.5, leadDecay: 5),
+        SongSpec(id: "petal", title: "Petal Storm", blurb: "Expert · very fast", emoji: "🌸",
+                 bpm: 168, root: 59, seed: 77,
+                 chords: [Chord(root: 0, intervals: majT), Chord(root: 7, intervals: majT),
+                          Chord(root: 9, intervals: minT), Chord(root: 5, intervals: majT)],
+                 maxRhythm: 7, kickBeats: [0, 1, 2, 3], hatStep: 0.5, leadDecay: 6),
+        SongSpec(id: "row", title: "Row, Row, Row Your Boat", blurb: "Traditional · public domain", emoji: "🚣",
+                 bpm: 108, root: 60, seed: 0,
+                 chords: [Chord(root: 0, intervals: majT), Chord(root: 0, intervals: majT),
+                          Chord(root: 5, intervals: majT), Chord(root: 7, intervals: majT)],
+                 maxRhythm: 4, kickBeats: [0, 2], hatStep: 1, kind: .tune, leadDecay: 3,
+                 tune: SongSpec.row, group: "Folk & nursery"),
+        SongSpec(id: "buns", title: "Hot Cross Buns", blurb: "Traditional · public domain", emoji: "🥐",
+                 bpm: 112, root: 60, seed: 0,
+                 chords: [Chord(root: 0, intervals: majT), Chord(root: 7, intervals: majT),
+                          Chord(root: 0, intervals: majT), Chord(root: 5, intervals: majT)],
+                 maxRhythm: 4, kickBeats: [0, 2], hatStep: 1, kind: .tune, leadDecay: 3,
+                 tune: SongSpec.buns, group: "Folk & nursery"),
+        SongSpec(id: "london", title: "London Bridge Is Falling Down", blurb: "Traditional · public domain", emoji: "🌉",
+                 bpm: 116, root: 67, seed: 0,
+                 chords: [Chord(root: 0, intervals: majT), Chord(root: 7, intervals: majT),
+                          Chord(root: 0, intervals: majT), Chord(root: 5, intervals: majT)],
+                 maxRhythm: 4, kickBeats: [0, 2], hatStep: 1, kind: .tune, leadDecay: 3.5,
+                 tune: SongSpec.london, group: "Folk & nursery"),
+        SongSpec(id: "susanna", title: "Oh! Susanna", blurb: "Foster, 1848 · public domain", emoji: "🪕",
+                 bpm: 124, root: 60, seed: 0,
+                 chords: [Chord(root: 0, intervals: majT), Chord(root: 0, intervals: majT),
+                          Chord(root: 7, intervals: majT), Chord(root: 0, intervals: majT)],
+                 maxRhythm: 5, kickBeats: [0, 1.5, 2], hatStep: 0.5, kind: .tune, leadDecay: 4,
+                 tune: SongSpec.susanna, group: "Folk & nursery")
     ]
 
     // Tunes: "note:beats" tokens, R = rest. Note names default to octave 4 (C4 = middle C).
@@ -102,6 +142,31 @@ struct SongSpec: Identifiable {
     static let saints = [
         "C:.5 E:.5 F:.5 G:2.5 C:.5 E:.5 F:.5 G:2.5",
         "C:.5 E:.5 F:.5 G:.5 E:.5 C:.5 E:.5 D:.5 D:.5 E:.5 D:.5 C:.5 C:2"
+    ].joined(separator: " ")
+    static let row = [
+        "C:1 C:1 C:.75 D:.25 E:1 E:.75 D:.25 E:.75 F:.25 G:2",
+        "C5:.5 C5:.5 C5:.5 G:.5 G:.5 G:.5 E:.5 E:.5 E:.5 C:.5 C:.5 C:.5",
+        "G:.75 F:.25 E:.75 D:.25 C:2 R:2"
+    ].joined(separator: " ")
+    static let buns = [
+        "E:1 D:1 C:2 E:1 D:1 C:2",
+        "C:.5 C:.5 C:.5 C:.5 D:.5 D:.5 D:.5 D:.5 E:1 D:1 C:2"
+    ].joined(separator: " ")
+    static let london = [
+        "G:1.5 A:.5 G:1 F:1 E:1 F:1 G:2",
+        "D:1 E:1 F:2 E:1 F:1 G:2",
+        "G:1.5 A:.5 G:1 F:1 E:1 F:1 G:2",
+        "D:2 G:2 E:1 C:3"
+    ].joined(separator: " ")
+    static let susanna = [
+        "C:.5 D:.5 E:1 G:1.5 G:.5",
+        "A:.5 G:.5 E:1 C:1 D:1",
+        "E:.5 E:.5 D:1 C:1 D:1",
+        "D:3 R:1",
+        "C:.5 D:.5 E:1 G:1.5 G:.5",
+        "A:.5 G:.5 E:1 C:1 D:1",
+        "E:.5 E:.5 D:1 D:1 C:1",
+        "C:3 R:1"
     ].joined(separator: " ")
     static let mary = [
         "E:1 D:1 C:1 D:1 E:1 E:1 E:2 D:1 D:1 D:2 E:1 G:1 G:2",
