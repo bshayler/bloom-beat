@@ -81,8 +81,8 @@ struct MenuView: View {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 16) {
                     VStack(spacing: 2) {
-                        Text("Seedling Symphony")
-                            .font(.system(size: 34, weight: .heavy, design: .rounded))
+                        Text("Bloom Beat")
+                            .font(.system(size: 46, weight: .heavy, design: .rounded))
                             .foregroundStyle(LinearGradient(colors: [RGB(0.98, 0.98, 0.9).color, RGB(0.80, 0.97, 0.75).color],
                                                             startPoint: .top, endPoint: .bottom))
                             .shadow(color: ink.opacity(0.65), radius: 0, x: 0, y: 3)

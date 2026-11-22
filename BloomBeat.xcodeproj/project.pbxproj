@@ -7,136 +7,136 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		463D10122A3F87A39999767E /* Screens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35E762DDE00701B2282CD2E4 /* Screens.swift */; };
-		6E6AAF8986769EFD10E5111E /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78353CCD9ADEBDA9F6C50D36 /* Models.swift */; };
-		8589FF660A8F4202C0F7916D /* PlantArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7A9B116DDDC33D5C103D0CE /* PlantArt.swift */; };
-		D97DEB2E438A2C36CCAC0D50 /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C371B156B59C0051F95DC8C1 /* GameView.swift */; };
-		E00AAD7915B3084C9EA03B92 /* SeedlingSymphonyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A679E9954868F74FE0D6A13E /* SeedlingSymphonyApp.swift */; };
-		EA365C29D2C5BAB5F8633ABD /* GameEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C448828B1AAA5AB028A7E0B4 /* GameEngine.swift */; };
-		F02A77C0BA77F52615EE9B66 /* Songs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 551466CBA6C7932BBB7D4FE2 /* Songs.swift */; };
+		12A4FE0B93C9B66E7C1C996C /* Songs.swift in Sources */ = {isa = PBXBuildFile; fileRef = E24E0D56D429115EB8DF6176 /* Songs.swift */; };
+		3618DFC2D39CFC7096B6A431 /* Screens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 973CC0743CC8FF6302201268 /* Screens.swift */; };
+		42346939A8440FE1F5367CF9 /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB527BC74B6F4FDFC519C3B6 /* GameView.swift */; };
+		449AFDF8405CBE95129C6167 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4162FAD02B267AE04834806D /* Models.swift */; };
+		86FDFE5662471F3181155145 /* BloomBeatApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA038348B8F63A2A8A2E030 /* BloomBeatApp.swift */; };
+		AAE84740E4A13F66DA611969 /* GameEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C67DE041BD388C4FC085A964 /* GameEngine.swift */; };
+		E7E2A7EBD726818E1513CFD0 /* PlantArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EA7BC273E41B33FE5368E98 /* PlantArt.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		35E762DDE00701B2282CD2E4 /* Screens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Screens.swift; sourceTree = "<group>"; };
-		551466CBA6C7932BBB7D4FE2 /* Songs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Songs.swift; sourceTree = "<group>"; };
-		633A5EC28D396226625A0E54 /* SeedlingSymphony.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = SeedlingSymphony.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		78353CCD9ADEBDA9F6C50D36 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
-		A679E9954868F74FE0D6A13E /* SeedlingSymphonyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeedlingSymphonyApp.swift; sourceTree = "<group>"; };
-		C371B156B59C0051F95DC8C1 /* GameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
-		C448828B1AAA5AB028A7E0B4 /* GameEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameEngine.swift; sourceTree = "<group>"; };
-		D7A9B116DDDC33D5C103D0CE /* PlantArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlantArt.swift; sourceTree = "<group>"; };
+		4162FAD02B267AE04834806D /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		7EA7BC273E41B33FE5368E98 /* PlantArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlantArt.swift; sourceTree = "<group>"; };
+		973CC0743CC8FF6302201268 /* Screens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Screens.swift; sourceTree = "<group>"; };
+		AD3A146762A1536B708489FE /* BloomBeat.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = BloomBeat.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		BAA038348B8F63A2A8A2E030 /* BloomBeatApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BloomBeatApp.swift; sourceTree = "<group>"; };
+		BB527BC74B6F4FDFC519C3B6 /* GameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
+		C67DE041BD388C4FC085A964 /* GameEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameEngine.swift; sourceTree = "<group>"; };
+		E24E0D56D429115EB8DF6176 /* Songs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Songs.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
-		0DF8E8B2803921B8CB1A1EA2 /* Sources */ = {
+		1744391A6E56201A0E9F3994 = {
 			isa = PBXGroup;
 			children = (
-				C448828B1AAA5AB028A7E0B4 /* GameEngine.swift */,
-				C371B156B59C0051F95DC8C1 /* GameView.swift */,
-				78353CCD9ADEBDA9F6C50D36 /* Models.swift */,
-				D7A9B116DDDC33D5C103D0CE /* PlantArt.swift */,
-				35E762DDE00701B2282CD2E4 /* Screens.swift */,
-				A679E9954868F74FE0D6A13E /* SeedlingSymphonyApp.swift */,
-				551466CBA6C7932BBB7D4FE2 /* Songs.swift */,
+				A868E2BD9DFF4F8D00CD0341 /* Sources */,
+				9F7F6D104D782FB52A0BA5F2 /* Products */,
 			);
-			path = Sources;
 			sourceTree = "<group>";
 		};
-		6CC025E67EF898C36F83AB07 /* Products */ = {
+		9F7F6D104D782FB52A0BA5F2 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				633A5EC28D396226625A0E54 /* SeedlingSymphony.app */,
+				AD3A146762A1536B708489FE /* BloomBeat.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		BBCF5770B443B561743FC09B = {
+		A868E2BD9DFF4F8D00CD0341 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				0DF8E8B2803921B8CB1A1EA2 /* Sources */,
-				6CC025E67EF898C36F83AB07 /* Products */,
+				BAA038348B8F63A2A8A2E030 /* BloomBeatApp.swift */,
+				C67DE041BD388C4FC085A964 /* GameEngine.swift */,
+				BB527BC74B6F4FDFC519C3B6 /* GameView.swift */,
+				4162FAD02B267AE04834806D /* Models.swift */,
+				7EA7BC273E41B33FE5368E98 /* PlantArt.swift */,
+				973CC0743CC8FF6302201268 /* Screens.swift */,
+				E24E0D56D429115EB8DF6176 /* Songs.swift */,
 			);
+			path = Sources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		F097174C8C140F69A632872B /* SeedlingSymphony */ = {
+		C0F41F486774123C19C1A268 /* BloomBeat */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 53E1F5455997D1D103C51B6D /* Build configuration list for PBXNativeTarget "SeedlingSymphony" */;
+			buildConfigurationList = 86A4858370922AB4E9DBC4D8 /* Build configuration list for PBXNativeTarget "BloomBeat" */;
 			buildPhases = (
-				A01F4CF345D9FAE8C1C8BE13 /* Sources */,
+				842A40CEB4EB7BF88FFABD69 /* Sources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = SeedlingSymphony;
+			name = BloomBeat;
 			packageProductDependencies = (
 			);
-			productName = SeedlingSymphony;
-			productReference = 633A5EC28D396226625A0E54 /* SeedlingSymphony.app */;
+			productName = BloomBeat;
+			productReference = AD3A146762A1536B708489FE /* BloomBeat.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		24EBDB879C4954A78501CB8B /* Project object */ = {
+		4C3D4BC3F9EDE87F7FDDCDB2 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
-					F097174C8C140F69A632872B = {
+					C0F41F486774123C19C1A268 = {
 						ProvisioningStyle = Automatic;
 					};
 				};
 			};
-			buildConfigurationList = 6C2095363721A1609224EE13 /* Build configuration list for PBXProject "SeedlingSymphony" */;
+			buildConfigurationList = 66F39AB95D3C9A07CAE9B757 /* Build configuration list for PBXProject "BloomBeat" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				Base,
 				en,
 			);
-			mainGroup = BBCF5770B443B561743FC09B;
+			mainGroup = 1744391A6E56201A0E9F3994;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
-			productRefGroup = 6CC025E67EF898C36F83AB07 /* Products */;
+			productRefGroup = 9F7F6D104D782FB52A0BA5F2 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				F097174C8C140F69A632872B /* SeedlingSymphony */,
+				C0F41F486774123C19C1A268 /* BloomBeat */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
-		A01F4CF345D9FAE8C1C8BE13 /* Sources */ = {
+		842A40CEB4EB7BF88FFABD69 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EA365C29D2C5BAB5F8633ABD /* GameEngine.swift in Sources */,
-				D97DEB2E438A2C36CCAC0D50 /* GameView.swift in Sources */,
-				6E6AAF8986769EFD10E5111E /* Models.swift in Sources */,
-				8589FF660A8F4202C0F7916D /* PlantArt.swift in Sources */,
-				463D10122A3F87A39999767E /* Screens.swift in Sources */,
-				E00AAD7915B3084C9EA03B92 /* SeedlingSymphonyApp.swift in Sources */,
-				F02A77C0BA77F52615EE9B66 /* Songs.swift in Sources */,
+				86FDFE5662471F3181155145 /* BloomBeatApp.swift in Sources */,
+				AAE84740E4A13F66DA611969 /* GameEngine.swift in Sources */,
+				42346939A8440FE1F5367CF9 /* GameView.swift in Sources */,
+				449AFDF8405CBE95129C6167 /* Models.swift in Sources */,
+				E7E2A7EBD726818E1513CFD0 /* PlantArt.swift in Sources */,
+				3618DFC2D39CFC7096B6A431 /* Screens.swift in Sources */,
+				12A4FE0B93C9B66E7C1C996C /* Songs.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		4861EA869EAD5F3DB1F16444 /* Debug */ = {
+		2D23D5F1B493F7A3090F8934 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Seedling Symphony";
+				INFOPLIST_KEY_CFBundleDisplayName = "Bloom Beat";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -144,7 +144,30 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.seedlingsymphony.game;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bloombeat.game;
+				SDKROOT = iphoneos;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		2E59F91682B7FC9D4B49DBE7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Bloom Beat";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.bloombeat.game;
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
@@ -152,7 +175,7 @@
 			};
 			name = Debug;
 		};
-		716CCDB51B8699B3A19E8441 /* Release */ = {
+		B4F9602553074BB0F1DA5BAC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -208,7 +231,7 @@
 			};
 			name = Release;
 		};
-		80DD80E6652C749F7D37E0D8 /* Debug */ = {
+		FD554F526D22A2EE809145C3 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -271,51 +294,28 @@
 			};
 			name = Debug;
 		};
-		FB6294B285DD56BC269D6B23 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CODE_SIGN_STYLE = Automatic;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Seedling Symphony";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.seedlingsymphony.game;
-				SDKROOT = iphoneos;
-				SWIFT_OPTIMIZATION_LEVEL = "-O";
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		53E1F5455997D1D103C51B6D /* Build configuration list for PBXNativeTarget "SeedlingSymphony" */ = {
+		66F39AB95D3C9A07CAE9B757 /* Build configuration list for PBXProject "BloomBeat" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				4861EA869EAD5F3DB1F16444 /* Debug */,
-				FB6294B285DD56BC269D6B23 /* Release */,
+				FD554F526D22A2EE809145C3 /* Debug */,
+				B4F9602553074BB0F1DA5BAC /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		6C2095363721A1609224EE13 /* Build configuration list for PBXProject "SeedlingSymphony" */ = {
+		86A4858370922AB4E9DBC4D8 /* Build configuration list for PBXNativeTarget "BloomBeat" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				80DD80E6652C749F7D37E0D8 /* Debug */,
-				716CCDB51B8699B3A19E8441 /* Release */,
+				2E59F91682B7FC9D4B49DBE7 /* Debug */,
+				2D23D5F1B493F7A3090F8934 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 24EBDB879C4954A78501CB8B /* Project object */;
+	rootObject = 4C3D4BC3F9EDE87F7FDDCDB2 /* Project object */;
 }

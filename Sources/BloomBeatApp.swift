@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct SeedlingSymphonyApp: App {
+struct BloomBeatApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView().preferredColorScheme(.light)
