@@ -78,56 +78,56 @@ struct MenuView: View {
     var body: some View {
         ZStack {
             SceneryBackground()
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 16) {
-                    VStack(spacing: 2) {
-                        Text("Bloom Beat")
-                            .font(.system(size: 46, weight: .heavy, design: .rounded))
-                            .foregroundStyle(LinearGradient(colors: [RGB(0.98, 0.98, 0.9).color, RGB(0.80, 0.97, 0.75).color],
-                                                            startPoint: .top, endPoint: .bottom))
-                            .shadow(color: ink.opacity(0.65), radius: 0, x: 0, y: 3)
-                            .shadow(color: .black.opacity(0.25), radius: 8, y: 6)
-                        Text("Grow a garden with rhythm")
-                            .font(.system(size: 15, weight: .semibold, design: .rounded)).foregroundStyle(.white)
-                            .shadow(color: ink.opacity(0.6), radius: 2, y: 1)
-                    }
-                    .padding(.top, 6)
+            VStack(spacing: 10) {
+                VStack(spacing: 0) {
+                    Text("Bloom Beat")
+                        .font(.system(size: 38, weight: .heavy, design: .rounded))
+                        .foregroundStyle(LinearGradient(colors: [RGB(0.98, 0.98, 0.9).color, RGB(0.80, 0.97, 0.75).color],
+                                                        startPoint: .top, endPoint: .bottom))
+                        .shadow(color: ink.opacity(0.65), radius: 0, x: 0, y: 3)
+                        .shadow(color: .black.opacity(0.25), radius: 8, y: 6)
+                    Text("Grow a garden with rhythm")
+                        .font(.system(size: 13, weight: .semibold, design: .rounded)).foregroundStyle(.white)
+                        .shadow(color: ink.opacity(0.6), radius: 2, y: 1)
+                }
 
-                    PlantPreview(cycle: true).frame(height: 250)
+                PlantPreview(cycle: true, compact: true).frame(height: 140)
 
-                    ForEach(["Originals", "Cool originals", "Classical", "Folk & nursery"], id: \.self) { g in
-                        sectionTitle(g == "Originals" ? "Songs · originals" : "Songs · " + g.lowercased())
+                // only the song list scrolls, so the difficulty and Play button stay on screen
+                ScrollViewReader { proxy in
+                    ScrollView(showsIndicators: true) {
                         VStack(spacing: 8) {
-                            ForEach(Array(engine.songs.enumerated()).filter { $0.element.group == g }, id: \.offset) { idx, s in
-                                songRow(idx, s)
+                            ForEach(["Originals", "Cool originals", "Classical", "Folk & nursery"], id: \.self) { g in
+                                sectionTitle(g == "Originals" ? "Songs · originals" : "Songs · " + g.lowercased())
+                                    .padding(.top, 4)
+                                ForEach(Array(engine.songs.enumerated()).filter { $0.element.group == g }, id: \.offset) { idx, s in
+                                    songRow(idx, s).id(idx)
+                                }
                             }
                         }
+                        .padding(.vertical, 12)
                     }
+                    .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.06),
+                                                 .init(color: .black, location: 0.94), .init(color: .clear, location: 1)],
+                                         startPoint: .top, endPoint: .bottom))
+                    .onAppear { proxy.scrollTo(engine.selectedSong, anchor: .center) }
+                }
+                .frame(maxHeight: .infinity)
 
+                VStack(spacing: 6) {
                     sectionTitle("Number of tracks")
                     HStack(spacing: 8) {
                         ForEach(Difficulty.allCases) { d in diffButton(d) }
                     }
-
-                    HStack(spacing: 14) {
-                        tip("hand.tap.fill", "Tap")
-                        tip("arrow.up.to.line", "Hold vines")
-                        tip("circle.grid.2x1.fill", "Chords")
-                    }
-                    .padding(.top, 2)
-
-                    Button("Plant & Play") { engine.start() }
-                        .buttonStyle(BigButton())
-                        .disabled(engine.phase == .loading)
-
-                    Text("Songs are public-domain compositions played by an in-app synthesizer, so everything is royalty free.")
-                        .font(.system(size: 11, weight: .medium, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.9)).multilineTextAlignment(.center)
-                        .shadow(color: ink.opacity(0.6), radius: 2, y: 1)
                 }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 110)
+
+                Button("Plant & Play") { engine.start() }
+                    .buttonStyle(BigButton())
+                    .disabled(engine.phase == .loading)
             }
+            .padding(.horizontal, 20)
+            .padding(.top, 2)
+            .padding(.bottom, 92)
         }
     }
 
@@ -177,7 +177,7 @@ struct MenuView: View {
         let sel = engine.difficulty == d
         return Button { engine.difficulty = d } label: {
             VStack(spacing: 4) {
-                Text("\(d.lanes)").font(.system(size: 28, weight: .heavy, design: .rounded))
+                Text("\(d.lanes)").font(.system(size: 24, weight: .heavy, design: .rounded))
                 HStack(spacing: 2) {
                     ForEach(0..<d.lanes, id: \.self) { i in
                         Circle().fill(Palette.laneColor(i, of: d.lanes).color).frame(width: 6, height: 6)
@@ -188,7 +188,7 @@ struct MenuView: View {
             }
             .foregroundStyle(sel ? .white : ink)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 10)
+            .padding(.vertical, 7)
             .background(RoundedRectangle(cornerRadius: 18)
                 .fill(sel ? LinearGradient(colors: [leaf.mixed(RGB(1, 1, 1), 0.2).color, leaf.mixed(RGB(0, 0, 0), 0.12).color], startPoint: .top, endPoint: .bottom)
                           : LinearGradient(colors: [.white.opacity(0.6), .white.opacity(0.5)], startPoint: .top, endPoint: .bottom)))

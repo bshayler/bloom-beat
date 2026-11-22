@@ -352,7 +352,8 @@ enum SongRenderer {
         for _ in 0..<4 {
             var notes: [MelodyNote] = []
             for bar in 0..<4 {
-                let r = (spec.sustain && bar == 2) ? [0, 2] : allowed.randomElement(using: &rng)!
+                let longBar: [Double] = spec.bpm >= 138 ? [0] : [0, 2]
+                let r = (spec.sustain || spec.kind == .generated) && bar == 2 ? longBar : allowed.randomElement(using: &rng)!
                 for (i, off) in r.enumerated() {
                     let next = i + 1 < r.count ? r[i + 1] : 4.0
                     let step = [-2, -1, -1, 0, 1, 1, 2].randomElement(using: &rng)!
@@ -423,7 +424,7 @@ enum ChartBuilder {
             out.append(GNote(time: time, lane: lane, dur: dur))
             busy[lane] = time + dur
             let chordBar = lanes >= 4 ? 1 : 2
-            if inBar == 0 && barIdx % chordBar == 0 && barIdx > 0 {
+            if inBar == 0 && barIdx % chordBar == 0 && barIdx > 0 && dur == 0 {   // held notes stay free for slides
                 let partner = (lane + max(1, lanes / 2)) % lanes
                 if time >= busy[partner] + 0.12 {
                     out.append(GNote(time: time, lane: partner, dur: dur))
@@ -436,24 +437,64 @@ enum ChartBuilder {
             for j in out.indices where j != i && abs(out[j].time - out[i].time) < 0.001 { out[i].partner = j }
         }
 
-        // long holds with no chord partner become slides that bend into another lane
+        // long holds with no chord partner become slides that bend into another lane;
+        // on fast songs every other slide is a double vine: a mirrored pair swung with two fingers
         if lanes >= 3 {
-            var holdCount = 0
-            for i in out.indices where out[i].isHold && out[i].dur >= 0.7 && out[i].partner < 0 {
+            let hard = song.spec.bpm >= 138
+            var holdCount = 0, slideCount = 0
+            var extra: [GNote] = []
+            func busy(_ lo: Int, _ hi: Int, _ t0: Double, _ t1: Double, except i: Int) -> Bool {
+                out.indices.contains { j in j != i && out[j].lane >= lo && out[j].lane <= hi && out[j].time < t1 && out[j].end > t0 }
+                    || extra.contains { $0.lane >= lo && $0.lane <= hi && $0.time < t1 && $0.end > t0 }
+            }
+            for i in out.indices where out[i].isHold && out[i].dur >= 0.5 && out[i].partner < 0 {
                 holdCount += 1
                 if holdCount % 3 == 0 { continue }          // keep every third hold straight
                 let lane = out[i].lane
-                let t0 = out[i].time - 0.05, t1 = out[i].end + 0.25
-                // prefer a two-lane sweep towards the middle, then one lane either way
+                let t0 = out[i].time - 0.05, t1 = out[i].end + 0.06
+
+                // double vine: this vine plus a second one swinging in a lane group of its own
+                if hard && lanes >= 4 && slideCount % 2 == 0 {
+                    var made = false
+                    for step in [1, -1, 2, -2] {
+                        let end = lane + step
+                        guard end >= 0, end < lanes else { continue }
+                        let lo = min(lane, end), hi = max(lane, end)
+                        if busy(lo, hi, t0, t1, except: i) { continue }
+                        // the second vine: as far from this one as possible, never sharing a lane with it
+                        var best: (Int, Int)? = nil
+                        var bestDist = -1
+                        for pl in 0..<lanes {
+                            for dir in [1, -1, 2, -2] {
+                                let pe = pl + dir
+                                guard pe >= 0, pe < lanes else { continue }
+                                let plo = min(pl, pe), phi = max(pl, pe)
+                                if !(phi < lo || plo > hi) { continue }
+                                if busy(plo, phi, t0, t1, except: i) { continue }
+                                let dist = abs(pl - lane)
+                                if dist > bestDist { bestDist = dist; best = (pl, pe) }
+                            }
+                        }
+                        if let (pl, pe) = best {
+                            out[i].endLane = end
+                            extra.append(GNote(time: out[i].time, lane: pl, dur: out[i].dur, endLane: pe))
+                            made = true
+                            break
+                        }
+                    }
+                    if made { slideCount += 1; continue }
+                }
+
+                // single slide: prefer a two-lane sweep towards the middle, then one lane either way
                 let mid = (lanes - 1) / 2
                 let toward = lane < mid ? 1 : (lane > mid ? -1 : (i % 2 == 0 ? 1 : -1))
                 for step in [2 * toward, 1 * toward, -1 * toward, -2 * toward] {
                     let target = lane + step
                     guard target >= 0, target < lanes, target != lane else { continue }
-                    let clash = out.indices.contains { j in j != i && out[j].lane == target && out[j].time < t1 && out[j].end > t0 }
-                    if !clash { out[i].endLane = target; break }
+                    if !busy(target, target, t0, t1, except: i) { out[i].endLane = target; slideCount += 1; break }
                 }
             }
+            if !extra.isEmpty { out += extra; out.sort { $0.time < $1.time } }
         }
         return out
     }

@@ -14,24 +14,25 @@ struct SynthStyle {
     var pad: Float = 0.075       // pad level
     var pump = false             // sidechain-style ducking of pads and arps on every kick
     var harmony = false          // quiet octave-up double on the lead
+    var echo: Float = 0.16       // ping-pong echo amount
 
     static let table: [String: SynthStyle] = [
         "dew": SynthStyle(lead: .epiano, drums: .gentle, bass: .pluck, wet: 0.35, pad: 0.08),
         "sun": SynthStyle(lead: .pluck, drums: .pop, bass: .pluck, wet: 0.25),
         "rain": SynthStyle(lead: .bell, drums: .pop, bass: .pluck, wet: 0.35, harmony: true),
-        "moon": SynthStyle(lead: .epiano, drums: .gentle, bass: .pluck, wet: 0.50, pad: 0.10),
+        "moon": SynthStyle(lead: .epiano, drums: .gentle, bass: .pluck, wet: 0.50, pad: 0.10, echo: 0.24),
         "firefly": SynthStyle(lead: .bell, drums: .pop, bass: .sub, wet: 0.30, pad: 0.06, harmony: true),
-        "petal": SynthStyle(lead: .saw, drums: .electro, bass: .synth, wet: 0.22, pump: true),
+        "petal": SynthStyle(lead: .saw, drums: .electro, bass: .synth, wet: 0.22, pump: true, echo: 0.12),
         "neon": SynthStyle(lead: .saw, drums: .electro, bass: .synth, wet: 0.30, pump: true, harmony: true),
-        "funk": SynthStyle(lead: .saw, drums: .pop, bass: .synth, wet: 0.20),
-        "sakura": SynthStyle(lead: .pluck, drums: .gentle, bass: .pluck, wet: 0.45, pad: 0.09),
-        "thunder": SynthStyle(lead: .saw, drums: .electro, bass: .synth, wet: 0.22, pump: true),
-        "rodeo": SynthStyle(lead: .pluck, drums: .pop, bass: .pluck, wet: 0.15),
-        "aurora": SynthStyle(lead: .epiano, drums: .gentle, bass: .pluck, wet: 0.55, pad: 0.085),
+        "funk": SynthStyle(lead: .saw, drums: .pop, bass: .synth, wet: 0.20, echo: 0.1),
+        "sakura": SynthStyle(lead: .pluck, drums: .gentle, bass: .pluck, wet: 0.45, pad: 0.09, echo: 0.22),
+        "thunder": SynthStyle(lead: .saw, drums: .electro, bass: .synth, wet: 0.22, pump: true, echo: 0.12),
+        "rodeo": SynthStyle(lead: .pluck, drums: .pop, bass: .pluck, wet: 0.15, echo: 0.08),
+        "aurora": SynthStyle(lead: .epiano, drums: .gentle, bass: .pluck, wet: 0.55, pad: 0.085, echo: 0.28),
         "king": SynthStyle(lead: .pluck, drums: .pop, bass: .pluck, wet: 0.30),
         "bee": SynthStyle(lead: .saw, drums: .gentle, bass: .pluck, wet: 0.25),
-        "ode": SynthStyle(lead: .flute, drums: .gentle, bass: .pluck, wet: 0.40, harmony: true),
-        "twinkle": SynthStyle(lead: .bell, drums: .none, bass: .pluck, wet: 0.45),
+        "ode": SynthStyle(lead: .flute, drums: .gentle, bass: .pluck, wet: 0.40, harmony: true, echo: 0.2),
+        "twinkle": SynthStyle(lead: .bell, drums: .none, bass: .pluck, wet: 0.45, echo: 0.2),
         "jingle": SynthStyle(lead: .bell, drums: .pop, bass: .pluck, wet: 0.30),
         "saints": SynthStyle(lead: .brass, drums: .pop, bass: .pluck, wet: 0.25),
         "mary": SynthStyle(lead: .pluck, drums: .gentle, bass: .pluck, wet: 0.35),
@@ -77,6 +78,9 @@ final class StereoMixer {
     }
 
     @inline(__always) func noise() -> Float { Float.random(in: -1...1, using: &rng) }
+    /// Tiny timing wobble for drums and bass so they feel played, not programmed (never used on the melody).
+    func jitter() -> Double { Double(Float.random(in: -0.007...0.007, using: &rng)) }
+    func vel(_ lo: Float = 0.78) -> Float { Float.random(in: lo...1.05, using: &rng) }
 
     /// Mix the first `len` samples of scratch into the buses.
     func commit(start: Double, len: Int, pan: Float, sendAmt: Float, pad: Bool) {
@@ -380,8 +384,25 @@ final class StereoMixer {
     }
 
     /// Reverb, ducking, filtering, soft clip and normalisation. Returns interleaved stereo samples.
-    func master(style: SynthStyle, fadeOut: Double) -> [Float] {
+    func master(style: SynthStyle, fadeOut: Double, beat: Double) -> [Float] {
         let (rl, rr) = reverb(send)
+
+        // ping-pong echo: dotted eighth to the left, quarter to the right, each repeat a little darker
+        var dlyL = [Float](repeating: 0, count: n), dlyR = [Float](repeating: 0, count: n)
+        if style.echo > 0 {
+            let dL = max(1, Int(0.75 * beat * StereoMixer.srD)), dR = max(1, Int(1.0 * beat * StereoMixer.srD))
+            var lpL: Float = 0, lpR: Float = 0
+            for i in 0..<n {
+                let x = send[i] * 0.5
+                lpR += ((i >= dR ? dlyR[i - dR] : 0) - lpR) * 0.45
+                lpL += ((i >= dL ? dlyL[i - dL] : 0) - lpL) * 0.45
+                dlyL[i] = x + 0.42 * lpR
+                dlyR[i] = 0.42 * lpL
+            }
+        }
+        let echoGain = style.echo * 2
+        var comp: Float = 0
+        let cAtk = expf(-1 / (0.010 * StereoMixer.sr)), cRel = expf(-1 / (0.14 * StereoMixer.sr))
         var duck = [Float](repeating: 1, count: n)
         if style.pump {
             let len = Int(0.22 * StereoMixer.srD)
@@ -399,12 +420,17 @@ final class StereoMixer {
         var peak: Float = 0.0001
         let fadeStart = n - Int(fadeOut * StereoMixer.srD)
         for i in 0..<n {
-            var l = dryL[i] + padL[i] * duck[i] + rl[i] * wetGain
-            var r = dryR[i] + padR[i] * duck[i] + rr[i] * wetGain
+            var l = dryL[i] + padL[i] * duck[i] + rl[i] * wetGain + dlyL[i] * echoGain
+            var r = dryR[i] + padR[i] * duck[i] + rr[i] * wetGain + dlyR[i] * echoGain
             // remove DC and sub-rumble
             let nl = l - xl + 0.996 * yl; xl = l; yl = nl; l = nl
             let nr = r - xr + 0.996 * yr; xr = r; yr = nr; r = nr
-            l = tanhf(l * 1.25); r = tanhf(r * 1.25)
+            // gentle glue compression
+            let lvl = max(abs(l), abs(r))
+            comp = lvl > comp ? lvl + cAtk * (comp - lvl) : lvl + cRel * (comp - lvl)
+            let g: Float = comp > 0.2 ? powf(comp / 0.2, 1 / 2.4 - 1) : 1
+            l *= g; r *= g
+            l = tanhf(l * 1.2); r = tanhf(r * 1.2)
             if i > fadeStart {
                 let g = max(0, 1 - Float(i - fadeStart) / Float(max(1, n - fadeStart)))
                 l *= g; r *= g
@@ -431,7 +457,10 @@ enum Synth {
         for bar in 0..<bars {
             let chord = spec.chords[bar % spec.chords.count]
             let t0 = leadIn + Double(bar * 4) * beat
-            let sec: Float = bar < 2 ? 0.6 : (bar < 4 ? 0.85 : 1.0)
+            // build in, bigger middle section, fade at the end
+            let lift: Float = (bar >= 16 && bar < 24) ? 1.15 : 1.0
+            let tail: Float = bar >= 28 ? max(0.35, 1 - Float(bar - 27) * 0.14) : 1
+            let sec: Float = (bar < 2 ? 0.6 : (bar < 4 ? 0.85 : 1.0)) * lift * tail
 
             // pad: three detuned saws per chord tone, slow swell
             for (k, iv) in chord.intervals.enumerated() {
@@ -440,6 +469,10 @@ enum Synth {
                       cutStart: 1100, cutEnd: 1100, cutTau: 1, release: 0.7, detuneCents: 8,
                       pan: [-0.55, 0, 0.55][k % 3], sendAmt: 0.25, pad: true)
             }
+
+            // a fourth pad voice: the root an octave up, for fullness
+            m.saw(t0, dur: 4 * beat, freq: midiFreq(spec.root + chord.root + 12), amp: st.pad * sec * 0.55, attack: 0.55, decay: 0,
+                  cutStart: 1000, cutEnd: 1000, cutTau: 1, release: 0.8, detuneCents: 6, pan: 0.12, sendAmt: 0.25, pad: true)
 
             // bass
             let bassMidi = spec.root - 12 + chord.root
@@ -450,11 +483,11 @@ enum Synth {
                     ? [(0, rootF), (2, bar % 2 == 0 ? fifthF : rootF)]
                     : [(0, rootF), (1.5, rootF), (2, fifthF), (3, rootF)]
                 for (off, f) in pattern {
-                    m.pluck(t0 + off * beat, freq: f, amp: 0.20 * sec, decay: 3.5, bright: 0.40, pan: -0.05, sendAmt: 0.04)
+                    m.pluck(t0 + off * beat + m.jitter(), freq: f, amp: 0.20 * sec * m.vel(0.88), decay: 3.5, bright: 0.40, pan: -0.05, sendAmt: 0.04)
                 }
             case .sub:
                 for (off, f) in [(0.0, rootF), (1.0, rootF), (2.0, fifthF), (3.0, rootF)] {
-                    m.subBass(t0 + off * beat, dur: 0.85 * beat, freq: f, amp: 0.17 * sec)
+                    m.subBass(t0 + off * beat + m.jitter(), dur: 0.85 * beat, freq: f, amp: 0.17 * sec)
                 }
             case .synth:
                 for i in 0..<8 {
@@ -472,22 +505,23 @@ enum Synth {
                 switch st.drums {
                 case .none: break
                 case .gentle:
-                    m.kick(t0, amp: 0.18 * sec)
-                    for i in 0..<4 { m.shaker(t0 + Double(i) * beat, amp: (i % 2 == 0 ? 0.20 : 0.13), pan: i % 2 == 0 ? -0.2 : 0.2) }
+                    m.kick(t0 + m.jitter(), amp: 0.18 * sec * m.vel(0.9))
+                    for i in 0..<4 { m.shaker(t0 + Double(i) * beat + m.jitter(), amp: (i % 2 == 0 ? 0.20 : 0.13) * m.vel(), pan: i % 2 == 0 ? -0.2 : 0.2) }
                 case .pop:
-                    for kb in spec.kickBeats { m.kick(t0 + kb * beat, amp: 0.26) }
-                    m.snare(t0 + 1 * beat, amp: 0.20)
-                    m.snare(t0 + 3 * beat, amp: 0.20)
+                    for kb in spec.kickBeats { m.kick(t0 + kb * beat + m.jitter(), amp: 0.26 * m.vel(0.92)) }
+                    m.snare(t0 + 1 * beat + m.jitter(), amp: 0.20 * m.vel(0.9))
+                    m.snare(t0 + 3 * beat + m.jitter(), amp: 0.20 * m.vel(0.9))
+                    if bar % 8 == 0 { m.crash(t0, amp: 0.22) }
                     var b = 0.0
                     while b < 4 {
                         let accent: Float = b.truncatingRemainder(dividingBy: 1) == 0 ? 0.20 : 0.11
-                        m.hat(t0 + b * beat, amp: accent)
+                        m.hat(t0 + b * beat + m.jitter(), amp: accent * m.vel())
                         b += max(0.5, spec.hatStep)
                     }
                 case .electro:
-                    for kb in [0.0, 1.0, 2.0, 3.0] { m.kick(t0 + kb * beat, amp: 0.25) }
-                    m.clap(t0 + 1 * beat, amp: 0.22)
-                    m.clap(t0 + 3 * beat, amp: 0.22)
+                    for kb in [0.0, 1.0, 2.0, 3.0] { m.kick(t0 + kb * beat + m.jitter() * 0.5, amp: 0.25 * m.vel(0.95)) }
+                    m.clap(t0 + 1 * beat + m.jitter(), amp: 0.22 * m.vel(0.9))
+                    m.clap(t0 + 3 * beat + m.jitter(), amp: 0.22 * m.vel(0.9))
                     for off in [0.5, 1.5, 2.5, 3.5] { m.hat(t0 + off * beat, amp: 0.20, open: true) }
                     for i in 0..<16 where i % 2 == 1 { m.hat(t0 + Double(i) * 0.25 * beat, amp: 0.07) }
                     if bar % 8 == 0 { m.crash(t0, amp: 0.30) }
@@ -542,12 +576,13 @@ enum Synth {
                           detuneCents: 5, pan: pan, sendAmt: 0.28)
                 }
             }
-            if st.harmony && !isHold {
+            let barIdx = Int(n.beat / 4)
+            if (st.harmony || (barIdx >= 16 && barIdx < 24)) && !isHold {
                 m.bell(start, freq: f * 2, amp: 0.045, decay: 5, pan: -pan, sendAmt: 0.35, ratio: 2.0, index: 1.2)
             }
         }
 
-        let pcm = m.master(style: st, fadeOut: 2.2)
+        let pcm = m.master(style: st, fadeOut: 2.2, beat: beat)
         return (wavData(pcm), Double(pcm.count / 2) / StereoMixer.srD)
     }
 
