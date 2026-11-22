@@ -479,11 +479,14 @@ enum GameRenderer {
         }
     }
 
+    /// Flower-petal outline: broad rounded top with a small notch, tapering to a point at the bottom.
     static func dropPath(_ s: CGFloat) -> Path {
         var d = Path()
-        d.move(to: CGPoint(x: 0, y: -24 * s))
-        d.addCurve(to: CGPoint(x: 0, y: 22 * s), control1: CGPoint(x: 19 * s, y: -7 * s), control2: CGPoint(x: 20 * s, y: 13 * s))
-        d.addCurve(to: CGPoint(x: 0, y: -24 * s), control1: CGPoint(x: -20 * s, y: 13 * s), control2: CGPoint(x: -19 * s, y: -7 * s))
+        d.move(to: CGPoint(x: 0, y: 24 * s))
+        d.addCurve(to: CGPoint(x: 9 * s, y: -22 * s), control1: CGPoint(x: 13 * s, y: 10 * s), control2: CGPoint(x: 19 * s, y: -10 * s))
+        d.addCurve(to: CGPoint(x: 0, y: -22 * s), control1: CGPoint(x: 6 * s, y: -26 * s), control2: CGPoint(x: 2.5 * s, y: -25 * s))
+        d.addCurve(to: CGPoint(x: -9 * s, y: -22 * s), control1: CGPoint(x: -2.5 * s, y: -25 * s), control2: CGPoint(x: -6 * s, y: -26 * s))
+        d.addCurve(to: CGPoint(x: 0, y: 24 * s), control1: CGPoint(x: -19 * s, y: -10 * s), control2: CGPoint(x: -13 * s, y: 10 * s))
         d.closeSubpath()
         return d
     }
@@ -495,14 +498,7 @@ enum GameRenderer {
         let k = r / 22
         g.scaleBy(x: k, y: k)
 
-        func drop(_ s: CGFloat) -> Path {
-            var d = Path()
-            d.move(to: CGPoint(x: 0, y: -24 * s))
-            d.addCurve(to: CGPoint(x: 0, y: 22 * s), control1: CGPoint(x: 19 * s, y: -7 * s), control2: CGPoint(x: 20 * s, y: 13 * s))
-            d.addCurve(to: CGPoint(x: 0, y: -24 * s), control1: CGPoint(x: -20 * s, y: 13 * s), control2: CGPoint(x: -19 * s, y: -7 * s))
-            d.closeSubpath()
-            return d
-        }
+        func drop(_ s: CGFloat) -> Path { GameRenderer.dropPath(s) }
 
         var shadow = g
         shadow.translateBy(x: 1.5, y: 3)
@@ -513,8 +509,8 @@ enum GameRenderer {
             center: CGPoint(x: -6, y: -6), startRadius: 1, endRadius: 34))
         g.stroke(drop(1), with: .color(.white.opacity(0.92 * alpha)), style: StrokeStyle(lineWidth: hold ? 3.6 : 2.6, lineJoin: .round))
         var gloss = Path()
-        gloss.move(to: CGPoint(x: -6, y: -8))
-        gloss.addQuadCurve(to: CGPoint(x: -4, y: 11), control: CGPoint(x: -10, y: 2))
+        gloss.move(to: CGPoint(x: -8, y: -11))
+        gloss.addQuadCurve(to: CGPoint(x: -4, y: 11), control: CGPoint(x: -13, y: 0))
         g.stroke(gloss, with: .color(.white.opacity(0.6 * alpha)), style: StrokeStyle(lineWidth: 3.2, lineCap: .round))
         if hold {
             g.stroke(drop(0.55), with: .color(.white.opacity(0.6 * alpha)), lineWidth: 2)
