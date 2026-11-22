@@ -177,7 +177,7 @@ enum GameRenderer {
         if e.layout.size != size { e.layout.size = size }
         let L = e.layout
         let w = e.displayWilt
-        let t = e.songTime
+        let t = e.songTime + e.displayLead
         let wallNow = CACurrentMediaTime()
 
         drawScenery(&ctx, size: size, groundY: L.highwayTop, wilt: w, time: time)
@@ -194,136 +194,197 @@ enum GameRenderer {
         drawText(&ctx, stageName, at: CGPoint(x: chip.midX, y: chip.midY), size: 13,
                  color: RGB(0.10, 0.34, 0.20).color, shadow: false)
 
-        // highway bed (garden at dusk)
+        // ---- 3D track: everything below is drawn with perspective ----
+        let cx = size.width / 2
+        let horizon = L.horizonY
+        let hitY = L.hitY
+        func yAt(_ sc: CGFloat) -> CGFloat { horizon + (hitY - horizon) * sc }
+        func xAt(_ x: CGFloat, _ sc: CGFloat) -> CGFloat { cx + (x - cx) * sc }
+        func sAt(_ time: Double) -> CGFloat {
+            let u = (time - t) / e.approach
+            return 1 / (1 + L.persp * CGFloat(max(u, -0.45)))
+        }
+        let sTop = 1 / (1 + L.persp)
+        let sBot = (size.height - horizon) / (hitY - horizon)
+        func quad(_ xl: CGFloat, _ xr: CGFloat, _ s0: CGFloat, _ s1: CGFloat) -> Path {
+            var p = Path()
+            p.move(to: CGPoint(x: xAt(xl, s0), y: yAt(s0)))
+            p.addLine(to: CGPoint(x: xAt(xr, s0), y: yAt(s0)))
+            p.addLine(to: CGPoint(x: xAt(xr, s1), y: yAt(s1)))
+            p.addLine(to: CGPoint(x: xAt(xl, s1), y: yAt(s1)))
+            p.closeSubpath()
+            return p
+        }
+
+        // ground either side of the track
         let hw = CGRect(x: 0, y: L.highwayTop, width: size.width, height: size.height - L.highwayTop)
         ctx.fill(Path(hw), with: .linearGradient(
-            Gradient(colors: [RGB(0.17, 0.38, 0.27).color, RGB(0.08, 0.20, 0.17).color, RGB(0.05, 0.12, 0.12).color]),
+            Gradient(colors: [RGB(0.22, 0.46, 0.28).color, RGB(0.09, 0.24, 0.17).color, RGB(0.05, 0.14, 0.12).color]),
             startPoint: CGPoint(x: 0, y: hw.minY), endPoint: CGPoint(x: 0, y: hw.maxY)))
         ctx.fill(Path(CGRect(x: 0, y: hw.minY - 2, width: size.width, height: 6)),
                  with: .linearGradient(Gradient(colors: [RGB(0.58, 0.88, 0.46).color, RGB(0.30, 0.66, 0.34).color]),
                                        startPoint: CGPoint(x: 0, y: hw.minY - 2), endPoint: CGPoint(x: 0, y: hw.minY + 4)))
 
-        // lanes (glass panels)
-        for i in 0..<L.lanes {
-            let c = Palette.laneColor(i, of: L.lanes)
-            let r = CGRect(x: L.margin + L.laneW * CGFloat(i) + 3, y: hw.minY + 8, width: L.laneW - 6, height: hw.height - 8)
-            ctx.fill(Path(roundedRect: r, cornerRadius: 14), with: .linearGradient(
-                Gradient(colors: [c.color.opacity(0.03), c.color.opacity(0.20)]),
-                startPoint: CGPoint(x: 0, y: r.minY), endPoint: CGPoint(x: 0, y: r.maxY)))
-            ctx.stroke(Path(roundedRect: r, cornerRadius: 14), with: .color(.white.opacity(0.10)), lineWidth: 1)
-            let glow = e.laneGlow[i]
-            if glow > 0 {
-                ctx.fill(Path(roundedRect: r, cornerRadius: 14),
-                         with: .linearGradient(Gradient(colors: [c.color.opacity(0), c.color.opacity(0.5 * glow)]),
-                                               startPoint: CGPoint(x: 0, y: r.minY), endPoint: CGPoint(x: 0, y: L.hitY + 30)))
-            }
+        // the road itself, with glowing rails
+        let roadL = L.margin - 2, roadR = size.width - L.margin + 2
+        ctx.fill(quad(roadL, roadR, sTop, sBot), with: .linearGradient(
+            Gradient(colors: [RGB(0.14, 0.30, 0.24).color, RGB(0.06, 0.15, 0.14).color, RGB(0.03, 0.09, 0.10).color]),
+            startPoint: CGPoint(x: 0, y: yAt(sTop)), endPoint: CGPoint(x: 0, y: yAt(sBot))))
+        for edge in [roadL, roadR] {
+            var rail = Path()
+            rail.move(to: CGPoint(x: xAt(edge, sTop), y: yAt(sTop)))
+            rail.addLine(to: CGPoint(x: xAt(edge, sBot), y: yAt(sBot)))
+            ctx.stroke(rail, with: .color(RGB(0.7, 1.0, 0.75).color.opacity(0.35)), lineWidth: 4)
         }
 
-        let travel = L.hitY - L.highwayTop
-        func yFor(_ time: Double) -> CGFloat { L.hitY - CGFloat((time - t) / e.approach) * travel }
+        // lanes
+        for i in 0..<L.lanes {
+            let c = Palette.laneColor(i, of: L.lanes)
+            let xl = L.margin + L.laneW * CGFloat(i) + 3
+            let xr = xl + L.laneW - 6
+            let lane = quad(xl, xr, sTop, sBot)
+            ctx.fill(lane, with: .linearGradient(
+                Gradient(colors: [c.color.opacity(0.03), c.color.opacity(0.26)]),
+                startPoint: CGPoint(x: 0, y: yAt(sTop)), endPoint: CGPoint(x: 0, y: yAt(sBot))))
+            ctx.stroke(lane, with: .color(.white.opacity(0.14)), lineWidth: 1)
+            let glow = e.laneGlow[i]
+            if glow > 0 {
+                ctx.fill(lane, with: .linearGradient(Gradient(colors: [c.color.opacity(0), c.color.opacity(0.55 * glow)]),
+                                                     startPoint: CGPoint(x: 0, y: yAt(sTop)), endPoint: CGPoint(x: 0, y: hitY + 30)))
+            }
+        }
 
         var clipped = ctx
         clipped.clip(to: Path(CGRect(x: 0, y: hw.minY + 2, width: size.width, height: hw.height)))
 
-        // scrolling beat lines (sense of tempo)
+        // scrolling beat lines
         if let song = e.currentSong {
             let beat = e.beatSec
             var k = max(0, Int(floor((t - song.leadIn) / beat)))
             while true {
                 let bt = song.leadIn + Double(k) * beat
                 if bt > t + e.approach { break }
-                let y = yFor(bt)
-                if y <= L.hitY + 20 {
+                let sc = sAt(bt)
+                let y = yAt(sc)
+                if y <= hitY + 20 {
                     var line = Path()
-                    line.move(to: CGPoint(x: L.margin + 6, y: y)); line.addLine(to: CGPoint(x: size.width - L.margin - 6, y: y))
-                    clipped.stroke(line, with: .color(.white.opacity(k % 4 == 0 ? 0.20 : 0.07)), lineWidth: k % 4 == 0 ? 2 : 1)
+                    line.move(to: CGPoint(x: xAt(L.margin + 6, sc), y: y))
+                    line.addLine(to: CGPoint(x: xAt(size.width - L.margin - 6, sc), y: y))
+                    clipped.stroke(line, with: .color(.white.opacity(k % 4 == 0 ? 0.22 : 0.08)),
+                                   lineWidth: (k % 4 == 0 ? 2.2 : 1.2) * sc)
                 }
                 k += 1
             }
         }
 
-        // notes
+        // hit line and receptor pads lying flat on the ground
+        var hitLine = Path()
+        hitLine.move(to: CGPoint(x: L.margin, y: hitY + 6))
+        hitLine.addLine(to: CGPoint(x: size.width - L.margin, y: hitY + 6))
+        ctx.stroke(hitLine, with: .color(.white.opacity(0.16)), style: StrokeStyle(lineWidth: 2, dash: [6, 6]))
         let R = L.noteR
+        for i in 0..<L.lanes {
+            let c = Palette.laneColor(i, of: L.lanes)
+            let x = L.laneX(i)
+            let glow = e.laneGlow[i]
+            let k = (R * (1.14 + CGFloat(glow) * 0.08)) / 22
+            // shadow on the ground, then a petal-shaped slot the falling petals drop into
+            ctx.fill(Path(ellipseIn: CGRect(x: x - R * 1.0, y: hitY + R * 0.86, width: R * 2.0, height: R * 0.5)),
+                     with: .color(.black.opacity(0.35)))
+            var slot = ctx
+            slot.translateBy(x: x, y: hitY)
+            slot.scaleBy(x: k, y: k)
+            slot.fill(GameRenderer.dropPath(1), with: .radialGradient(
+                Gradient(colors: [c.mixed(RGB(0.2, 0.12, 0.08), 0.7).color, RGB(0.14, 0.09, 0.07).color]),
+                center: CGPoint(x: 0, y: 4), startRadius: 1, endRadius: 30))
+            slot.fill(GameRenderer.dropPath(1), with: .color(c.color.opacity(0.10 + 0.6 * glow)))
+            slot.stroke(GameRenderer.dropPath(1), with: .linearGradient(
+                Gradient(colors: [c.mixed(RGB(1, 1, 1), 0.5).color, c.color, c.mixed(RGB(0, 0, 0), 0.25).color]),
+                startPoint: CGPoint(x: 0, y: -24), endPoint: CGPoint(x: 0, y: 22)), style: StrokeStyle(lineWidth: 3.6, lineJoin: .round))
+            slot.stroke(GameRenderer.dropPath(0.62), with: .color(.white.opacity(0.16 + 0.35 * glow)), lineWidth: 1.6)
+            var stemP = Path()
+            stemP.move(to: CGPoint(x: 0, y: 12)); stemP.addLine(to: CGPoint(x: 0, y: 1))
+            slot.stroke(stemP, with: .color(RGB(0.5, 0.9, 0.45).color.opacity(0.8)), style: StrokeStyle(lineWidth: 2, lineCap: .round))
+            for sd in [-1.0, 1.0] {
+                var l = slot
+                l.translateBy(x: 0, y: 1)
+                l.rotate(by: .radians(sd * 0.9))
+                l.fill(Path(ellipseIn: CGRect(x: -3, y: -9, width: 6, height: 9)), with: .color(RGB(0.5, 0.9, 0.45).color.opacity(0.85)))
+            }
+        }
+
+        // notes, drawn far to near so closer ones overlap
+        var visible: [Int] = []
         for (idx, n) in e.notes.enumerated() {
             if n.time + n.dur < t - 0.6 { continue }
             if n.time > t + e.approach { break }
             if n.holdDone { continue }
             if n.hit && !n.holding && !n.holdFailed { continue }
-            let x = L.laneX(n.lane)
+            visible.append(idx)
+        }
+        for idx in visible.reversed() {
+            let n = e.notes[idx]
             let col = Palette.laneColor(n.lane, of: L.lanes)
             let dim = (n.resolved && !n.hit) || n.holdFailed
-            let headY = n.holding ? L.hitY : yFor(n.time)
-            let alpha = dim ? 0.35 : min(1, Double(headY - L.highwayTop) / 40 + 0.2)
+            let sc: CGFloat = n.holding ? 1 : sAt(n.time)
+            let y = n.holding ? hitY : yAt(sc)
+            if y > size.height + 60 { continue }
+            let x = xAt(L.laneX(n.lane), sc)
+            let r = R * sc
+            let alpha = dim ? 0.35 : min(1, Double((y - L.highwayTop) / 30) + 0.25)
 
-            // hold tail (vine)
+            // hold tail (vine) in perspective
             if n.isHold {
-                let tailY = yFor(n.end)
-                let top = min(tailY, headY), bot = headY
-                if bot - top > 2 {
-                    let tw = R * 0.78
-                    let rect = CGRect(x: x - tw / 2, y: top, width: tw, height: bot - top)
+                let sT = sAt(n.end)
+                let yT = yAt(sT)
+                let xT = xAt(L.laneX(n.lane), sT)
+                let tw = R * 0.78
+                if y - yT > 2 {
+                    var tail = Path()
+                    tail.move(to: CGPoint(x: xT - tw * sT / 2, y: yT))
+                    tail.addLine(to: CGPoint(x: xT + tw * sT / 2, y: yT))
+                    tail.addLine(to: CGPoint(x: x + tw * sc / 2, y: y))
+                    tail.addLine(to: CGPoint(x: x - tw * sc / 2, y: y))
+                    tail.closeSubpath()
                     let pulse = n.holding ? 0.75 + 0.25 * sin(time * 14) : 0.55
-                    clipped.fill(Path(roundedRect: rect, cornerRadius: tw / 2),
-                                 with: .linearGradient(Gradient(colors: [col.mixed(RGB(0, 0, 0), 0.2).color.opacity(alpha),
-                                                                         col.mixed(RGB(1, 1, 1), 0.35).color.opacity(alpha),
-                                                                         col.mixed(RGB(0, 0, 0), 0.2).color.opacity(alpha)]),
-                                                       startPoint: CGPoint(x: rect.minX, y: 0), endPoint: CGPoint(x: rect.maxX, y: 0)))
-                    clipped.stroke(Path(roundedRect: rect, cornerRadius: tw / 2), with: .color(.white.opacity(pulse * alpha)), lineWidth: 2)
-                    var yy = bot - 26
-                    var side = 1.0
-                    while yy > top + 8 {
+                    clipped.fill(tail, with: .linearGradient(
+                        Gradient(colors: [col.mixed(RGB(0, 0, 0), 0.15).color.opacity(alpha), col.mixed(RGB(1, 1, 1), 0.35).color.opacity(alpha),
+                                          col.mixed(RGB(0, 0, 0), 0.15).color.opacity(alpha)]),
+                        startPoint: CGPoint(x: x - tw * sc / 2, y: 0), endPoint: CGPoint(x: x + tw * sc / 2, y: 0)))
+                    clipped.stroke(tail, with: .color(.white.opacity(pulse * alpha)), lineWidth: 2 * max(0.5, sc))
+                    let len = y - yT
+                    let count = max(1, Int(len / (30 * (sc + sT) / 2)))
+                    for jj in 0..<count {
+                        let f = (CGFloat(jj) + 0.5) / CGFloat(count)
+                        let sj = sc + (sT - sc) * f
+                        let side: CGFloat = jj % 2 == 0 ? 1 : -1
                         var lc = clipped
-                        lc.translateBy(x: x + side * tw * 0.4, y: yy)
-                        lc.rotate(by: .radians(side * 1.0))
+                        lc.translateBy(x: xAt(L.laneX(n.lane), sj) + side * tw * sj * 0.4, y: yAt(sj))
+                        lc.scaleBy(x: sj, y: sj)
+                        lc.rotate(by: .radians(Double(side)))
                         var lp = Path()
                         lp.move(to: .zero)
                         lp.addQuadCurve(to: CGPoint(x: 0, y: -13), control: CGPoint(x: 7, y: -5))
                         lp.addQuadCurve(to: .zero, control: CGPoint(x: -7, y: -5))
                         lc.fill(lp, with: .color(RGB(0.42, 0.85, 0.40).color.opacity(alpha * 0.9)))
-                        side = -side
-                        yy -= 28
                     }
-                    if tailY > L.highwayTop - 10 {
-                        clipped.fill(Path(ellipseIn: CGRect(x: x - tw * 0.62, y: tailY - tw * 0.62, width: tw * 1.24, height: tw * 1.24)),
+                    if yT > L.highwayTop - 10 {
+                        clipped.fill(Path(ellipseIn: CGRect(x: xT - tw * sT * 0.62, y: yT - tw * sT * 0.62, width: tw * sT * 1.24, height: tw * sT * 1.24)),
                                      with: .radialGradient(Gradient(colors: [col.mixed(RGB(1, 1, 1), 0.7).color.opacity(alpha), col.color.opacity(alpha)]),
-                                                           center: CGPoint(x: x - 3, y: tailY - 3), startRadius: 1, endRadius: tw))
+                                                           center: CGPoint(x: xT - 2, y: yT - 2), startRadius: 1, endRadius: tw * sT))
                     }
                     if n.holding {
-                        clipped.fill(Path(ellipseIn: CGRect(x: x - R * 1.7, y: L.hitY - R * 1.7, width: R * 3.4, height: R * 3.4)),
+                        clipped.fill(Path(ellipseIn: CGRect(x: x - R * 1.7, y: hitY - R * 1.7, width: R * 3.4, height: R * 3.4)),
                                      with: .radialGradient(Gradient(colors: [col.color.opacity(0.55), .clear]),
-                                                           center: CGPoint(x: x, y: L.hitY), startRadius: 4, endRadius: R * 1.7))
+                                                           center: CGPoint(x: x, y: hitY), startRadius: 4, endRadius: R * 1.7))
                     }
                 }
             }
-            drawSeed(&clipped, at: CGPoint(x: x, y: headY), r: R, color: dim ? RGB(0.5, 0.5, 0.5) : col, alpha: alpha, hold: n.isHold)
-        }
 
-        // receptors (little flower pots)
-        for i in 0..<L.lanes {
-            let c = Palette.laneColor(i, of: L.lanes)
-            let x = L.laneX(i)
-            let glow = e.laneGlow[i]
-            let rr = R + 6 + CGFloat(glow) * 3
-            let ring = CGRect(x: x - rr, y: L.hitY - rr, width: rr * 2, height: rr * 2)
-            ctx.fill(Path(ellipseIn: ring.offsetBy(dx: 0, dy: 4)), with: .color(.black.opacity(0.3)))
-            ctx.fill(Path(ellipseIn: ring), with: .radialGradient(
-                Gradient(colors: [c.mixed(RGB(0.2, 0.12, 0.08), 0.75).color, RGB(0.22, 0.13, 0.08).color]),
-                center: CGPoint(x: x, y: L.hitY - 4), startRadius: 2, endRadius: rr))
-            ctx.fill(Path(ellipseIn: ring.insetBy(dx: 5, dy: 5)), with: .color(c.color.opacity(0.10 + 0.6 * glow)))
-            ctx.stroke(Path(ellipseIn: ring), with: .linearGradient(
-                Gradient(colors: [c.mixed(RGB(1, 1, 1), 0.5).color, c.color, c.mixed(RGB(0, 0, 0), 0.25).color]),
-                startPoint: CGPoint(x: x, y: ring.minY), endPoint: CGPoint(x: x, y: ring.maxY)), lineWidth: 5)
-            var sp = ctx
-            sp.translateBy(x: x, y: L.hitY + 6)
-            var stemP = Path()
-            stemP.move(to: .zero); stemP.addLine(to: CGPoint(x: 0, y: -10))
-            sp.stroke(stemP, with: .color(RGB(0.5, 0.9, 0.45).color.opacity(0.7)), lineWidth: 2)
-            for sd in [-1.0, 1.0] {
-                var l = sp
-                l.translateBy(x: 0, y: -10)
-                l.rotate(by: .radians(sd * 0.9))
-                l.fill(Path(ellipseIn: CGRect(x: -3, y: -10, width: 6, height: 10)), with: .color(RGB(0.5, 0.9, 0.45).color.opacity(0.75)))
-            }
+            // soft ground shadow, then the petal standing above it
+            clipped.fill(Path(ellipseIn: CGRect(x: x - r * 0.9, y: y + r * 0.78, width: r * 1.8, height: r * 0.45)),
+                         with: .color(.black.opacity(0.30 * alpha)))
+            drawSeed(&clipped, at: CGPoint(x: x, y: y), r: r, color: dim ? RGB(0.5, 0.5, 0.5) : col, alpha: alpha, hold: n.isHold)
         }
 
         // particles
@@ -404,6 +465,15 @@ enum GameRenderer {
             drawText(&ctx, "Hold the vines · tap paired petals together", at: CGPoint(x: size.width / 2, y: (L.highwayTop + L.hitY) / 2 + 14),
                      size: 14, color: .white.opacity(a * 0.85), weight: .bold)
         }
+    }
+
+    static func dropPath(_ s: CGFloat) -> Path {
+        var d = Path()
+        d.move(to: CGPoint(x: 0, y: -24 * s))
+        d.addCurve(to: CGPoint(x: 0, y: 22 * s), control1: CGPoint(x: 19 * s, y: -7 * s), control2: CGPoint(x: 20 * s, y: 13 * s))
+        d.addCurve(to: CGPoint(x: 0, y: -24 * s), control1: CGPoint(x: -20 * s, y: 13 * s), control2: CGPoint(x: -19 * s, y: -7 * s))
+        d.closeSubpath()
+        return d
     }
 
     /// A falling petal drop: teardrop with a glossy highlight. Hold notes get an extra inner outline.

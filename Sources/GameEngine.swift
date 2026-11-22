@@ -26,6 +26,21 @@ struct Layout {
     var noteR: CGFloat { min(laneW * 0.34, 30) }
     func laneX(_ i: Int) -> CGFloat { margin + laneW * (CGFloat(i) + 0.5) }
     func lane(atX x: CGFloat) -> Int { min(lanes - 1, max(0, Int(floor((x - margin) / laneW)))) }
+
+    // Perspective: the track narrows towards a vanishing line above the far end.
+    var persp: CGFloat { 1.7 }
+    var trackTop: CGFloat { highwayTop + 4 }
+    var horizonY: CGFloat {
+        let s1 = 1 / (1 + persp)
+        return (trackTop - hitY * s1) / (1 - s1)
+    }
+    func scaleAt(y: CGFloat) -> CGFloat { max(0.2, (y - horizonY) / (hitY - horizonY)) }
+    /// Lane under a screen point, undoing the perspective squeeze at that height.
+    func lane(at p: CGPoint) -> Int {
+        let cx = size.width / 2
+        let s = scaleAt(y: p.y)
+        return lane(atX: cx + (p.x - cx) / s)
+    }
 }
 
 final class GameEngine: NSObject, ObservableObject {
@@ -116,7 +131,12 @@ final class GameEngine: NSObject, ObservableObject {
     let haptic = UIImpactFeedbackGenerator(style: .light)
 
     let autoplay = ProcessInfo.processInfo.arguments.contains("-autoplay")
-    let perfectWin = 0.055, greatWin = 0.10, goodWin = 0.15
+    // Judgment windows (seconds either side of the note)
+    let perfectWin = 0.07, greatWin = 0.115, goodWin = 0.16
+    /// How late this player/device typically taps, learned during play and remembered between sessions.
+    var calibration: Double = (UserDefaults.standard.object(forKey: "timing.calibration") as? Double) ?? 0.04
+    /// Notes are drawn this far ahead of the audio clock to cancel the display pipeline delay.
+    let displayLead = 0.03
 
     var totalNotes: Int { notes.count }
     var stage: Int { PlantStage.index(for: displayHealth) }
@@ -231,12 +251,14 @@ final class GameEngine: NSObject, ObservableObject {
     }
 
     func quit() {
+        UserDefaults.standard.set(calibration, forKey: "timing.calibration")
         link?.invalidate(); link = nil
         player?.stop(); player = nil
         phase = .menu
     }
 
     func finish() {
+        UserDefaults.standard.set(calibration, forKey: "timing.calibration")
         link?.invalidate(); link = nil
         player?.stop(); player = nil
         if let s = currentSong {
@@ -276,7 +298,7 @@ final class GameEngine: NSObject, ObservableObject {
 
         // expire missed notes
         var i = firstActive
-        while i < notes.count && notes[i].time < songTime - goodWin {
+        while i < notes.count && notes[i].time < songTime - max(0, calibration) - goodWin {
             if !notes[i].resolved { registerMiss(i) }
             i += 1
         }
@@ -330,14 +352,14 @@ final class GameEngine: NSObject, ObservableObject {
 
     func touchBegan(id: ObjectIdentifier, at p: CGPoint, timestamp: TimeInterval) {
         guard phase == .playing, p.y > layout.highwayTop - 30 else { return }
-        let idx = tap(lane: layout.lane(atX: p.x), host: timestamp)
+        let idx = tap(lane: layout.lane(at: p), host: timestamp)
         if idx >= 0, notes[idx].isHold { touchHolds[id] = idx }
     }
 
     func touchEnded(id: ObjectIdentifier, timestamp: TimeInterval) {
         guard let idx = touchHolds.removeValue(forKey: id), notes[idx].holding else { return }
         let h = min(timestamp, CACurrentMediaTime())
-        let t = lastA + (h - lastHost) - outputLatency
+        let t = lastA + (h - lastHost) - outputLatency - calibration
         if t >= notes[idx].end - 0.2 { completeHold(idx) } else { failHold(idx) }
     }
 
@@ -346,7 +368,8 @@ final class GameEngine: NSObject, ObservableObject {
         guard phase == .playing else { return -1 }
         laneGlow[lane] = 1
         let h = min(host, CACurrentMediaTime())
-        let t = lastA + (h - lastHost) - outputLatency
+        let raw = lastA + (h - lastHost) - outputLatency
+        let t = raw - calibration
         var best = -1
         var bestD = goodWin + 0.0001
         var i = firstActive
@@ -359,6 +382,12 @@ final class GameEngine: NSObject, ObservableObject {
         }
         guard best >= 0 else { return -1 }
         let j: Judgment = bestD <= perfectWin ? .perfect : (bestD <= greatWin ? .great : .good)
+        // learn the steady lag in this player's taps so on-beat taps land as Perfect
+        let err = raw - notes[best].time
+        if abs(err - calibration) < 0.13 {
+            calibration += 0.1 * (err - calibration)
+            calibration = max(-0.06, min(0.16, calibration))
+        }
         registerHit(best, j)
         return best
     }

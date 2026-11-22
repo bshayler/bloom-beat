@@ -24,7 +24,7 @@
 		7EA7BC273E41B33FE5368E98 /* PlantArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlantArt.swift; sourceTree = "<group>"; };
 		81A279855687042F230EECAD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		973CC0743CC8FF6302201268 /* Screens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Screens.swift; sourceTree = "<group>"; };
-		AD3A146762A1536B708489FE /* BloomBeat.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = BloomBeat.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AD3A146762A1536B708489FE /* BloomBeat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BloomBeat.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BAA038348B8F63A2A8A2E030 /* BloomBeatApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BloomBeatApp.swift; sourceTree = "<group>"; };
 		BB527BC74B6F4FDFC519C3B6 /* GameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
 		C67DE041BD388C4FC085A964 /* GameEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameEngine.swift; sourceTree = "<group>"; };
@@ -155,6 +155,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = DZ775L4YCN;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Bloom Beat";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
@@ -182,6 +183,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = DZ775L4YCN;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Bloom Beat";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;

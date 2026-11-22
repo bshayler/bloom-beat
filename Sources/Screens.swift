@@ -9,14 +9,12 @@ struct ContentView: View {
     var body: some View {
         ZStack {
             switch engine.phase {
-            case .menu, .loading:
-                MenuView(engine: engine)
+            case .menu, .loading, .shelf:
+                MainTabs(engine: engine)
             case .playing, .paused:
                 GameView(engine: engine)
             case .finished:
                 ResultView(engine: engine)
-            case .shelf:
-                ShelfView(engine: engine)
             }
             if engine.phase == .loading {
                 ZStack {
@@ -122,21 +120,13 @@ struct MenuView: View {
                         .buttonStyle(BigButton())
                         .disabled(engine.phase == .loading)
 
-                    Button { engine.phase = .shelf } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: "books.vertical.fill")
-                            Text("My plant shelf" + (engine.shelf.isEmpty ? "" : " · \(engine.shelf.count)"))
-                        }
-                    }
-                    .buttonStyle(BigButton(secondary: true))
-
                     Text("Songs are public-domain compositions played by an in-app synthesizer, so everything is royalty free.")
                         .font(.system(size: 11, weight: .medium, design: .rounded))
                         .foregroundStyle(.white.opacity(0.9)).multilineTextAlignment(.center)
                         .shadow(color: ink.opacity(0.6), radius: 2, y: 1)
                 }
                 .padding(.horizontal, 20)
-                .padding(.bottom, 24)
+                .padding(.bottom, 110)
             }
         }
     }
@@ -274,11 +264,7 @@ struct ShelfView: View {
                 .ignoresSafeArea()
             VStack(spacing: 0) {
                 HStack {
-                    Button { engine.phase = .menu } label: {
-                        Image(systemName: "chevron.left").font(.system(size: 17, weight: .bold))
-                            .foregroundStyle(.white).frame(width: 40, height: 40)
-                            .background(Circle().fill(RGB(0.28, 0.64, 0.32).color))
-                    }
+                    Color.clear.frame(width: 40, height: 40)
                     Spacer()
                     VStack(spacing: 0) {
                         Text("My plant shelf").font(.system(size: 24, weight: .heavy, design: .rounded)).foregroundStyle(ink)
@@ -294,7 +280,7 @@ struct ShelfView: View {
                     VStack(spacing: 22) {
                         ForEach(0..<rowCount, id: \.self) { row in shelfRow(row) }
                     }
-                    .padding(.horizontal, 14).padding(.top, 8).padding(.bottom, 30)
+                    .padding(.horizontal, 14).padding(.top, 8).padding(.bottom, 110)
                 }
             }
         }
@@ -388,5 +374,65 @@ struct PlantDetail: View {
             .padding(.top, 24)
         }
         .presentationDetents([.large])
+    }
+}
+
+
+// MARK: - Bottom navigation
+
+struct MainTabs: View {
+    @ObservedObject var engine: GameEngine
+
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            if engine.phase == .shelf {
+                ShelfView(engine: engine)
+            } else {
+                MenuView(engine: engine)
+            }
+            TabBar(engine: engine)
+        }
+    }
+}
+
+struct TabBar: View {
+    @ObservedObject var engine: GameEngine
+
+    var body: some View {
+        HStack(spacing: 6) {
+            tab("Plant & Play", icon: "leaf.fill", selected: engine.phase != .shelf, badge: 0) {
+                if engine.phase == .shelf { engine.phase = .menu }
+            }
+            tab("Plant Shelf", icon: "books.vertical.fill", selected: engine.phase == .shelf, badge: engine.shelf.count) {
+                if engine.phase == .menu { engine.phase = .shelf }
+            }
+        }
+        .padding(6)
+        .background(Capsule().fill(.white.opacity(0.88)))
+        .overlay(Capsule().stroke(.white, lineWidth: 1))
+        .shadow(color: .black.opacity(0.22), radius: 12, y: 5)
+        .padding(.horizontal, 28)
+        .padding(.bottom, 6)
+    }
+
+    private func tab(_ title: String, icon: String, selected: Bool, badge: Int, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 7) {
+                Image(systemName: icon).font(.system(size: 16, weight: .bold))
+                Text(title).font(.system(size: 15, weight: .heavy, design: .rounded)).lineLimit(1).minimumScaleFactor(0.8)
+                if badge > 0 {
+                    Text("\(badge)").font(.system(size: 11, weight: .heavy, design: .rounded))
+                        .padding(.horizontal, 6).padding(.vertical, 2)
+                        .background(Capsule().fill(selected ? Color.white.opacity(0.3) : leaf.color.opacity(0.18)))
+                }
+            }
+            .foregroundStyle(selected ? .white : ink)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(Capsule().fill(selected
+                ? LinearGradient(colors: [leaf.mixed(RGB(1, 1, 1), 0.25).color, leaf.mixed(RGB(0, 0, 0), 0.12).color], startPoint: .top, endPoint: .bottom)
+                : LinearGradient(colors: [.clear, .clear], startPoint: .top, endPoint: .bottom)))
+        }
+        .buttonStyle(.plain)
     }
 }
