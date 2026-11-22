@@ -82,3 +82,19 @@ enum PlantStage {
         return idx
     }
 }
+
+struct PlantRecord: Codable, Identifiable {
+    var id = UUID()
+    var songID: String
+    var lanes: Int
+    var health: Double
+    var wilt: Double
+    var score: Int
+    var grade: String
+    var maxCombo: Int
+    var date: Date
+
+    var song: SongSpec? { SongSpec.all.first { $0.id == songID } }
+    var stageName: String { PlantStage.names[PlantStage.index(for: health)] }
+    var isWilted: Bool { wilt > 0.5 }
+}

@@ -15,6 +15,8 @@ struct ContentView: View {
                 GameView(engine: engine)
             case .finished:
                 ResultView(engine: engine)
+            case .shelf:
+                ShelfView(engine: engine)
             }
             if engine.phase == .loading {
                 ZStack {
@@ -115,6 +117,14 @@ struct MenuView: View {
                     Button("Plant & Play") { engine.start() }
                         .buttonStyle(BigButton())
                         .disabled(engine.phase == .loading)
+
+                    Button { engine.phase = .shelf } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "books.vertical.fill")
+                            Text("My plant shelf" + (engine.shelf.isEmpty ? "" : " · \(engine.shelf.count)"))
+                        }
+                    }
+                    .buttonStyle(BigButton(secondary: true))
 
                     Text("Songs are public-domain compositions played by an in-app synthesizer, so everything is royalty free.")
                         .font(.system(size: 11, weight: .medium, design: .rounded))
@@ -231,11 +241,148 @@ struct ResultView: View {
                 .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
 
                 Spacer(minLength: 4)
+                Text("Added to your plant shelf")
+                    .font(.system(size: 13, weight: .bold, design: .rounded)).foregroundStyle(.white)
+                    .shadow(color: ink.opacity(0.6), radius: 2, y: 1)
                 Button("Play again") { engine.phase = .menu; engine.start() }.buttonStyle(BigButton())
                 Button("Back to menu") { engine.phase = .menu }.buttonStyle(BigButton(secondary: true))
             }
             .padding(.horizontal, 28)
             .padding(.vertical, 20)
         }
+    }
+}
+
+
+// MARK: - Plant shelf
+
+struct ShelfView: View {
+    @ObservedObject var engine: GameEngine
+    @State private var selected: PlantRecord?
+
+    private let wood = [RGB(0.80, 0.56, 0.34), RGB(0.62, 0.40, 0.22)]
+
+    var body: some View {
+        let n = engine.shelf.count
+        let rowCount = max(3, (n + 2) / 3)
+        ZStack {
+            LinearGradient(colors: [RGB(0.99, 0.94, 0.84).color, RGB(0.93, 0.82, 0.66).color], startPoint: .top, endPoint: .bottom)
+                .ignoresSafeArea()
+            VStack(spacing: 0) {
+                HStack {
+                    Button { engine.phase = .menu } label: {
+                        Image(systemName: "chevron.left").font(.system(size: 17, weight: .bold))
+                            .foregroundStyle(.white).frame(width: 40, height: 40)
+                            .background(Circle().fill(RGB(0.28, 0.64, 0.32).color))
+                    }
+                    Spacer()
+                    VStack(spacing: 0) {
+                        Text("My plant shelf").font(.system(size: 24, weight: .heavy, design: .rounded)).foregroundStyle(ink)
+                        Text(n == 0 ? "Finish a song to grow your first plant" : "\(n) plant\(n == 1 ? "" : "s") · best \(engine.shelf.map { $0.score }.max() ?? 0)")
+                            .font(.system(size: 12, weight: .semibold, design: .rounded)).foregroundStyle(ink.opacity(0.65))
+                    }
+                    Spacer()
+                    Color.clear.frame(width: 40, height: 40)
+                }
+                .padding(.horizontal, 16).padding(.vertical, 8)
+
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 22) {
+                        ForEach(0..<rowCount, id: \.self) { row in shelfRow(row) }
+                    }
+                    .padding(.horizontal, 14).padding(.top, 8).padding(.bottom, 30)
+                }
+            }
+        }
+        .sheet(item: $selected) { r in PlantDetail(record: r) }
+    }
+
+    func shelfRow(_ row: Int) -> some View {
+        let recs = (0..<3).map { i -> PlantRecord? in
+            let idx = row * 3 + i
+            return idx < engine.shelf.count ? engine.shelf[idx] : nil
+        }
+        return VStack(spacing: 0) {
+            HStack(alignment: .bottom, spacing: 6) {
+                ForEach(0..<3, id: \.self) { i in cell(recs[i]) }
+            }
+            ZStack(alignment: .top) {
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(LinearGradient(colors: [wood[0].color, wood[1].color], startPoint: .top, endPoint: .bottom))
+                    .frame(height: 16)
+                RoundedRectangle(cornerRadius: 2).fill(.white.opacity(0.28)).frame(height: 3).padding(.horizontal, 4).padding(.top, 2)
+            }
+            .shadow(color: .black.opacity(0.25), radius: 5, y: 4)
+            HStack(alignment: .top, spacing: 6) {
+                ForEach(0..<3, id: \.self) { i in label(recs[i]) }
+            }
+            .padding(.top, 8)
+        }
+    }
+
+    @ViewBuilder
+    func cell(_ r: PlantRecord?) -> some View {
+        Group {
+            if let r {
+                Button { selected = r } label: {
+                    PlantPreview(health: r.health, wilt: r.wilt, compact: true)
+                }
+                .buttonStyle(.plain)
+                .contextMenu {
+                    Button(role: .destructive) { engine.removeFromShelf(r) } label: { Label("Remove from shelf", systemImage: "trash") }
+                }
+            } else {
+                Color.clear
+            }
+        }
+        .frame(maxWidth: .infinity).frame(height: 150)
+    }
+
+    @ViewBuilder
+    func label(_ r: PlantRecord?) -> some View {
+        if let r {
+            VStack(spacing: 1) {
+                Text(r.isWilted ? "\(r.stageName) (wilted)" : r.stageName)
+                    .font(.system(size: 12, weight: .heavy, design: .rounded)).foregroundStyle(ink)
+                    .lineLimit(1).minimumScaleFactor(0.7)
+                Text("\(r.score)").font(.system(size: 14, weight: .bold, design: .rounded)).foregroundStyle(ink.opacity(0.85))
+                Text("\(r.song?.emoji ?? "") \(r.lanes) tracks · \(r.grade)")
+                    .font(.system(size: 10, weight: .semibold, design: .rounded)).foregroundStyle(ink.opacity(0.6))
+            }
+            .frame(maxWidth: .infinity)
+        } else {
+            Color.clear.frame(maxWidth: .infinity, minHeight: 1)
+        }
+    }
+}
+
+struct PlantDetail: View {
+    let record: PlantRecord
+
+    var body: some View {
+        ZStack {
+            SceneryBackground()
+            VStack(spacing: 12) {
+                Text(record.isWilted ? "\(record.stageName) (wilted)" : record.stageName)
+                    .font(.system(size: 28, weight: .heavy, design: .rounded)).foregroundStyle(.white)
+                    .shadow(color: ink.opacity(0.7), radius: 0, y: 2)
+                PlantPreview(health: record.health, wilt: record.wilt).frame(height: 280)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("\(record.song?.emoji ?? "") \(record.song?.title ?? "Unknown song")")
+                        .font(.system(size: 17, weight: .heavy, design: .rounded))
+                    Text("\(record.lanes) tracks · grade \(record.grade)")
+                    Text("Score \(record.score) · max combo \(record.maxCombo)")
+                    Text(record.date.formatted(date: .abbreviated, time: .shortened)).foregroundStyle(ink.opacity(0.6))
+                }
+                .font(.system(size: 14, weight: .semibold, design: .rounded)).foregroundStyle(ink)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(16)
+                .background(RoundedRectangle(cornerRadius: 20).fill(.white.opacity(0.88)))
+                .padding(.horizontal, 24)
+                Spacer(minLength: 0)
+            }
+            .padding(.top, 24)
+        }
+        .presentationDetents([.large])
     }
 }

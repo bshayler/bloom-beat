@@ -316,6 +316,7 @@ struct PlantPreview: View {
     var health: Double = 0.5
     var wilt: Double = 0
     var cycle = false
+    var compact = false   // draw at menu proportions, scaled to fit small cells
 
     var body: some View {
         TimelineView(.animation) { tl in
@@ -331,7 +332,15 @@ struct PlantPreview: View {
                     let stageStart = PlantStage.thresholds[st]
                     pop = exp(-(h - stageStart) * 40) * (st > 0 ? 1 : 0)
                 }
-                drawPlant(ctx, rect: CGRect(origin: .zero, size: size), health: h, wilt: wilt, time: t, pop: pop)
+                if compact {
+                    let sc = size.height / 260
+                    var c = ctx
+                    c.translateBy(x: size.width / 2 - 175 * sc, y: 0)
+                    c.scaleBy(x: sc, y: sc)
+                    drawPlant(c, rect: CGRect(x: 0, y: 0, width: 350, height: 260), health: h, wilt: wilt, time: t, pop: pop)
+                } else {
+                    drawPlant(ctx, rect: CGRect(origin: .zero, size: size), health: h, wilt: wilt, time: t, pop: pop)
+                }
             }
         }
     }

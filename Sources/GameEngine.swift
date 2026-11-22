@@ -2,7 +2,7 @@ import SwiftUI
 import AVFoundation
 import UIKit
 
-enum Phase { case menu, loading, playing, paused, finished }
+enum Phase { case menu, loading, playing, paused, finished, shelf }
 
 struct Particle {
     var x: Double, y: Double, vx: Double, vy: Double
@@ -32,6 +32,34 @@ final class GameEngine: NSObject, ObservableObject {
     @Published var phase: Phase = .menu
     @Published var selectedSong = 0
     @Published var difficulty: Difficulty = .three
+    @Published var shelf: [PlantRecord] = []
+    static let shelfKey = "shelf.v1"
+
+    override init() {
+        super.init()
+        if let data = UserDefaults.standard.data(forKey: GameEngine.shelfKey),
+           let recs = try? JSONDecoder().decode([PlantRecord].self, from: data) {
+            shelf = recs
+        }
+        if ProcessInfo.processInfo.arguments.contains("-seedshelf") && shelf.isEmpty {
+            let ids = SongSpec.all.map { $0.id }
+            let samples: [(Double, Double, Int, String)] = [(0.97, 0, 98200, "S"), (0.85, 0, 61400, "A"), (0.72, 0, 40100, "B"),
+                                                           (0.58, 0, 25300, "C"), (0.40, 0, 14100, "C"), (0.05, 0.9, 3200, "D"), (0.30, 0.8, 5100, "D")]
+            for (i, x) in samples.enumerated() {
+                shelf.append(PlantRecord(songID: ids[i % ids.count], lanes: 2 + i % 4, health: x.0, wilt: x.1, score: x.2,
+                                         grade: x.3, maxCombo: 20 + i * 11, date: Date().addingTimeInterval(Double(-i) * 3600)))
+            }
+        }
+    }
+
+    func saveShelf() {
+        if let data = try? JSONEncoder().encode(shelf) { UserDefaults.standard.set(data, forKey: GameEngine.shelfKey) }
+    }
+
+    func removeFromShelf(_ r: PlantRecord) {
+        shelf.removeAll { $0.id == r.id }
+        saveShelf()
+    }
 
     let songs = SongSpec.all
     var cache: [String: RenderedSong] = [:]
@@ -200,6 +228,12 @@ final class GameEngine: NSObject, ObservableObject {
             if score > UserDefaults.standard.integer(forKey: key) {
                 UserDefaults.standard.set(score, forKey: key)
             }
+        }
+        if let s = currentSong {
+            shelf.insert(PlantRecord(songID: s.spec.id, lanes: lanes, health: health, wilt: displayWilt,
+                                     score: score, grade: grade, maxCombo: maxCombo, date: Date()), at: 0)
+            if shelf.count > 90 { shelf.removeLast(shelf.count - 90) }
+            saveShelf()
         }
         phase = .finished
     }

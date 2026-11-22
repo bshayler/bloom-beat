@@ -17,3 +17,4 @@ open BloomBeat.xcodeproj
 ```
 
 Launch with `-autoplay` to have the game hit every note (handy for testing).
+Launch with `-seedshelf` to fill the plant shelf with sample plants.
