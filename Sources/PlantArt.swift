@@ -10,18 +10,42 @@ private func bez(_ p0: CGPoint, _ p1: CGPoint, _ p2: CGPoint, _ p3: CGPoint, _ t
                    y: a * p0.y + b * p1.y + c * p2.y + d * p3.y)
 }
 
-private func leafPath(_ len: Double, half: Int = 0) -> Path {
+/// A real leaf: asymmetric, gently curved, pointed tip. `half` -1 = left half only, +1 = right half only.
+func leafPath(_ len: Double, half: Int = 0) -> Path {
+    let L = len
     var p = Path()
     p.move(to: .zero)
     if half <= 0 {
-        p.addQuadCurve(to: CGPoint(x: 0, y: -len), control: CGPoint(x: -len * 0.62, y: -len * 0.45))
+        // left edge up to the tip
+        p.addCurve(to: CGPoint(x: 0.05 * L, y: -L), control1: CGPoint(x: -0.40 * L, y: -0.08 * L), control2: CGPoint(x: -0.33 * L, y: -0.64 * L))
+    } else {
+        p.addLine(to: CGPoint(x: 0.05 * L, y: -L))
     }
     if half >= 0 {
-        if half > 0 { p.addLine(to: CGPoint(x: 0, y: -len)) }
-        p.addQuadCurve(to: .zero, control: CGPoint(x: len * 0.62, y: -len * 0.45))
+        // right edge back down to the base
+        if half > 0 { p.move(to: CGPoint(x: 0.05 * L, y: -L)) }
+        p.addCurve(to: .zero, control1: CGPoint(x: 0.47 * L, y: -0.62 * L), control2: CGPoint(x: 0.43 * L, y: -0.08 * L))
     }
     p.closeSubpath()
     return p
+}
+
+/// Midrib and side veins for a leaf of the given length.
+func leafVeins(_ len: Double) -> Path {
+    let L = len
+    var v = Path()
+    v.move(to: .zero)
+    v.addQuadCurve(to: CGPoint(x: 0.05 * L, y: -0.94 * L), control: CGPoint(x: 0.0, y: -0.5 * L))
+    for f in [0.28, 0.48, 0.68] {
+        let y = -f * L
+        let x = 0.012 * L * (f * 4)
+        let reach = (0.30 - 0.18 * f) * L
+        v.move(to: CGPoint(x: x, y: y))
+        v.addQuadCurve(to: CGPoint(x: x + reach, y: y - 0.16 * L), control: CGPoint(x: x + reach * 0.5, y: y - 0.03 * L))
+        v.move(to: CGPoint(x: x, y: y))
+        v.addQuadCurve(to: CGPoint(x: x - reach, y: y - 0.16 * L), control: CGPoint(x: x - reach * 0.5, y: y - 0.03 * L))
+    }
+    return v
 }
 
 private extension GraphicsContext {
@@ -110,13 +134,17 @@ func drawPlant(_ ctx: GraphicsContext, rect: CGRect, health h: Double, wilt w: D
 
     // leaves (two-tone fold + drop shadow)
     let leaves: [(Double, Double, Double)] = [
-        (0.30, -1, 0.18), (0.45, 1, 0.18), (0.62, -1, 0.34), (0.75, 1, 0.34), (0.88, -1, 0.50)
+        (0.20, -1, 0.18), (0.34, 1, 0.18), (0.48, -1, 0.34), (0.61, 1, 0.34), (0.74, -1, 0.50)
     ]
     func drawLeaf(at pt: CGPoint, side: Double, len: Double) {
         guard len > 1 else { return }
         var lc = g
         lc.translateBy(x: pt.x, y: pt.y)
-        lc.rotate(by: .radians(side * (0.75 + 0.95 * w) + sway * 2))
+        lc.rotate(by: .radians(side * (1.05 + 0.85 * w) + sway * 2))
+        // short stalk, then the leaf blade
+        var stalk = Path(); stalk.move(to: .zero); stalk.addLine(to: CGPoint(x: 0, y: -len * 0.14))
+        lc.stroke(stalk, with: .color(stemC.color), style: StrokeStyle(lineWidth: max(1, len * 0.06), lineCap: .round))
+        lc.translateBy(x: 0, y: -len * 0.14)
         var sh = lc
         sh.translateBy(x: 2, y: 3)
         sh.fill(leafPath(len), with: .color(.black.opacity(0.18)))
@@ -124,14 +152,12 @@ func drawPlant(_ ctx: GraphicsContext, rect: CGRect, health h: Double, wilt w: D
                                          CGPoint(x: -len * 0.4, y: 0), CGPoint(x: len * 0.4, y: 0)))
         lc.fill(leafPath(len, half: -1), with: lin([leafC.mixed(white, 0.30).color, leafC.mixed(white, 0.05).color],
                                                     CGPoint(x: -len * 0.4, y: -len), CGPoint(x: 0, y: 0)))
-        var vein = Path()
-        vein.move(to: .zero)
-        vein.addLine(to: CGPoint(x: 0, y: -len * 0.88))
-        lc.stroke(vein, with: .color(leafC.mixed(black, 0.35).color.opacity(0.8)), lineWidth: 1)
+        lc.stroke(leafPath(len), with: .color(leafC.mixed(black, 0.42).color.opacity(0.7)), lineWidth: 0.8)
+        lc.stroke(leafVeins(len), with: .color(leafC.mixed(black, 0.35).color.opacity(0.75)), style: StrokeStyle(lineWidth: max(0.6, len * 0.035), lineCap: .round))
     }
     for (t, side, minH) in leaves {
         let sc = smooth(minH, minH + 0.07, h) * (0.6 + 0.4 * grow)
-        drawLeaf(at: bez(p0, p1, p2, top, t), side: side, len: (16 + 26 * grow) * sc)
+        drawLeaf(at: bez(p0, p1, p2, top, t), side: side, len: (18 + 30 * grow) * sc)
     }
     let topPair = 1 - smooth(0.34, 0.50, h)
     if topPair > 0.01 {

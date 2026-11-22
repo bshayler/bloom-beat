@@ -373,11 +373,8 @@ enum GameRenderer {
                         lc.translateBy(x: q.c.x + side * tw * q.s * 0.4, y: q.c.y)
                         lc.scaleBy(x: q.s, y: q.s)
                         lc.rotate(by: .radians(Double(side)))
-                        var lp = Path()
-                        lp.move(to: .zero)
-                        lp.addQuadCurve(to: CGPoint(x: 0, y: -13), control: CGPoint(x: 7, y: -5))
-                        lp.addQuadCurve(to: .zero, control: CGPoint(x: -7, y: -5))
-                        lc.fill(lp, with: .color(RGB(0.42, 0.85, 0.40).color.opacity(alpha * 0.9)))
+                        lc.fill(leafPath(15), with: .color(RGB(0.42, 0.85, 0.40).color.opacity(alpha * 0.92)))
+                        lc.stroke(leafVeins(15), with: .color(RGB(0.15, 0.50, 0.25).color.opacity(alpha * 0.8)), lineWidth: 0.8)
                     }
                     if last.c.y > L.highwayTop - 10 {
                         clipped.fill(Path(ellipseIn: CGRect(x: last.c.x - tw * last.s * 0.62, y: last.c.y - tw * last.s * 0.62,
