@@ -74,13 +74,37 @@ enum Judgment: Int {
 }
 
 enum PlantStage {
-    static let names = ["Seedling", "Sprout", "Bud", "Daisy", "Tulip", "Cherry Blossom", "Sunflower"]
-    static let thresholds: [Double] = [0, 0.18, 0.34, 0.50, 0.66, 0.80, 0.92]
+    /// Growth stages: seedling, sprout, bud, then one flower that grows from small to big.
+    static let thresholds: [Double] = [0, 0.18, 0.34, 0.50, 0.66, 0.84]
+    static let flowerNames: [Int: String] = [3: "Daisy", 4: "Tulip", 5: "Cherry Blossom", 6: "Sunflower"]
+
     static func index(for h: Double) -> Int {
         var idx = 0
         for (i, t) in thresholds.enumerated() where h >= t { idx = i }
         return idx
     }
+
+    static func name(_ idx: Int, flower: Int) -> String {
+        let f = flowerNames[flower] ?? "Flower"
+        switch idx {
+        case 0: return "Seedling"
+        case 1: return "Sprout"
+        case 2: return "Bud"
+        case 3: return "Small \(f)"
+        case 4: return f
+        default: return "Big \(f)"
+        }
+    }
+
+    /// Every song grows one kind of flower: 3 daisy, 4 tulip, 5 cherry blossom, 6 sunflower.
+    static let songFlowers: [String: Int] = [
+        "dew": 3, "sun": 6, "rain": 4, "moon": 3, "firefly": 5, "petal": 5,
+        "neon": 4, "funk": 6, "sakura": 5, "thunder": 4, "rodeo": 6, "aurora": 3,
+        "king": 4, "bee": 6, "ode": 5, "twinkle": 3, "jingle": 4, "saints": 6,
+        "mary": 3, "row": 4, "buns": 6, "london": 5, "susanna": 6
+    ]
+
+    static func flower(for songID: String) -> Int { songFlowers[songID] ?? 3 }
 }
 
 struct PlantRecord: Codable, Identifiable {
@@ -93,8 +117,10 @@ struct PlantRecord: Codable, Identifiable {
     var grade: String
     var maxCombo: Int
     var date: Date
+    var flower: Int? = nil
 
     var song: SongSpec? { SongSpec.all.first { $0.id == songID } }
-    var stageName: String { PlantStage.names[PlantStage.index(for: health)] }
+    var flowerType: Int { flower ?? PlantStage.flower(for: songID) }
+    var stageName: String { PlantStage.name(PlantStage.index(for: health), flower: flowerType) }
     var isWilted: Bool { wilt > 0.5 }
 }

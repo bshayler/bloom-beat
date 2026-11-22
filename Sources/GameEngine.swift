@@ -20,7 +20,7 @@ struct Layout {
     var lanes = 3
     var margin: CGFloat { 10 }
     var laneW: CGFloat { (size.width - 2 * margin) / CGFloat(lanes) }
-    var plantRect: CGRect { CGRect(x: 0, y: topInset + 64, width: size.width, height: size.height * 0.30) }
+    var plantRect: CGRect { CGRect(x: 0, y: topInset + 64, width: size.width, height: size.height * 0.34) }
     var highwayTop: CGFloat { plantRect.maxY }
     var hitY: CGFloat { size.height - bottomInset - 74 }
     var noteR: CGFloat { min(laneW * 0.34, 30) }
@@ -40,6 +40,15 @@ final class GameEngine: NSObject, ObservableObject {
         if let data = UserDefaults.standard.data(forKey: GameEngine.shelfKey),
            let recs = try? JSONDecoder().decode([PlantRecord].self, from: data) {
             shelf = recs
+        }
+        let args = ProcessInfo.processInfo.arguments
+        if args.contains("-showshelf") { phase = .shelf }
+        if let i = args.firstIndex(of: "-autostart"), i + 2 < args.count,
+           let si = songs.firstIndex(where: { $0.id == args[i + 1] }), let n = Int(args[i + 2]),
+           let d = Difficulty(rawValue: n) {
+            selectedSong = si
+            difficulty = d
+            DispatchQueue.main.async { self.start() }
         }
         if ProcessInfo.processInfo.arguments.contains("-seedshelf") && shelf.isEmpty {
             let ids = SongSpec.all.map { $0.id }
@@ -90,6 +99,7 @@ final class GameEngine: NSObject, ObservableObject {
     var lastStage = 0
     var stageChangeTime = -10.0
     var currentSong: RenderedSong?
+    var flower = 3
     var beatSec = 0.5
     var activeHolds: [Int] = []
     var touchHolds: [ObjectIdentifier: Int] = [:]
@@ -169,6 +179,7 @@ final class GameEngine: NSObject, ObservableObject {
         }
         currentSong = r
         beatSec = 60 / r.spec.bpm
+        flower = PlantStage.flower(for: r.spec.id)
         activeHolds = []
         touchHolds = [:]
         lanes = diff.lanes
@@ -231,7 +242,7 @@ final class GameEngine: NSObject, ObservableObject {
         }
         if let s = currentSong {
             shelf.insert(PlantRecord(songID: s.spec.id, lanes: lanes, health: health, wilt: displayWilt,
-                                     score: score, grade: grade, maxCombo: maxCombo, date: Date()), at: 0)
+                                     score: score, grade: grade, maxCombo: maxCombo, date: Date(), flower: flower), at: 0)
             if shelf.count > 90 { shelf.removeLast(shelf.count - 90) }
             saveShelf()
         }

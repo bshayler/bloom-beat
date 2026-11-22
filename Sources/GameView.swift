@@ -184,10 +184,10 @@ enum GameRenderer {
 
         // plant
         let pop = exp(-(wallNow - e.stageChangeTime) * 3.5)
-        drawPlant(ctx, rect: L.plantRect.insetBy(dx: 0, dy: 4), health: e.displayHealth, wilt: w, time: time, pop: pop)
+        drawPlant(ctx, rect: L.plantRect.insetBy(dx: 0, dy: 4), health: e.displayHealth, wilt: w, time: time, pop: pop, flower: e.flower)
 
         // stage label (glass chip)
-        let stageName = PlantStage.names[e.stage] + (w > 0.55 ? " · wilting" : "")
+        let stageName = PlantStage.name(e.stage, flower: e.flower) + (w > 0.55 ? " · wilting" : "")
         let chip = CGRect(x: 14, y: L.plantRect.minY + 2, width: 14 + CGFloat(stageName.count) * 8.4, height: 26)
         ctx.fill(Path(roundedRect: chip, cornerRadius: 13), with: .color(.white.opacity(0.55)))
         ctx.stroke(Path(roundedRect: chip, cornerRadius: 13), with: .color(.white.opacity(0.8)), lineWidth: 1)
@@ -254,21 +254,6 @@ enum GameRenderer {
             let dim = (n.resolved && !n.hit) || n.holdFailed
             let headY = n.holding ? L.hitY : yFor(n.time)
             let alpha = dim ? 0.35 : min(1, Double(headY - L.highwayTop) / 40 + 0.2)
-
-            // chord link
-            if n.partner > idx && !n.resolved {
-                let o = e.notes[n.partner]
-                if !o.resolved {
-                    let x2 = L.laneX(o.lane)
-                    let bar = CGRect(x: min(x, x2), y: headY - 7, width: abs(x2 - x), height: 14)
-                    let c2 = Palette.laneColor(o.lane, of: L.lanes)
-                    clipped.fill(Path(roundedRect: bar, cornerRadius: 7), with: .linearGradient(
-                        Gradient(colors: x < x2 ? [col.color.opacity(0.85 * alpha), c2.color.opacity(0.85 * alpha)]
-                                                : [c2.color.opacity(0.85 * alpha), col.color.opacity(0.85 * alpha)]),
-                        startPoint: CGPoint(x: bar.minX, y: 0), endPoint: CGPoint(x: bar.maxX, y: 0)))
-                    clipped.stroke(Path(roundedRect: bar, cornerRadius: 7), with: .color(.white.opacity(0.7 * alpha)), lineWidth: 1.5)
-                }
-            }
 
             // hold tail (vine)
             if n.isHold {
@@ -411,7 +396,7 @@ enum GameRenderer {
             let a = 1 - smooth(1.6, 2.2, t)
             drawText(&ctx, "Tap seeds as they reach the pots", at: CGPoint(x: size.width / 2, y: (L.highwayTop + L.hitY) / 2 - 14),
                      size: 18, color: .white.opacity(a))
-            drawText(&ctx, "Hold the vines · press chords together", at: CGPoint(x: size.width / 2, y: (L.highwayTop + L.hitY) / 2 + 14),
+            drawText(&ctx, "Hold the vines · tap matching seeds together", at: CGPoint(x: size.width / 2, y: (L.highwayTop + L.hitY) / 2 + 14),
                      size: 14, color: .white.opacity(a * 0.85), weight: .bold)
         }
     }

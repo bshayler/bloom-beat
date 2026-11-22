@@ -24,6 +24,13 @@ private func leafPath(_ len: Double, half: Int = 0) -> Path {
     return p
 }
 
+private extension GraphicsContext {
+    mutating func translateTo(top: CGPoint, angle: Double) {
+        translateBy(x: top.x, y: top.y)
+        rotate(by: .radians(angle))
+    }
+}
+
 private func lin(_ colors: [Color], _ a: CGPoint, _ b: CGPoint) -> GraphicsContext.Shading {
     .linearGradient(Gradient(colors: colors), startPoint: a, endPoint: b)
 }
@@ -33,13 +40,13 @@ private func rad(_ colors: [Color], _ c: CGPoint, _ r0: Double, _ r1: Double) ->
 
 /// Draws the potted plant. `health` 0...1 picks growth stage; `wilt` 0...1 droops and fades it.
 func drawPlant(_ ctx: GraphicsContext, rect: CGRect, health h: Double, wilt w: Double,
-               time: Double, pop: Double) {
+               time: Double, pop: Double, flower: Int = 3) {
     var g = ctx
     let potW = min(rect.width * 0.26, rect.height * 0.36)
     let potH = potW * 0.62
     let cx = rect.midX
     let potTop = rect.maxY - potH
-    let headroom = min(72, rect.height * 0.28)
+    let headroom = min(104, rect.height * 0.40)
     let maxH = max(40, rect.height - potH - 14 - headroom)
 
     // ground shadow
@@ -134,23 +141,27 @@ func drawPlant(_ ctx: GraphicsContext, rect: CGRect, health h: Double, wilt w: D
         drawLeaf(at: pt, side: 1, len: len)
     }
 
-    // flower head
-    let s = PlantStage.index(for: h)
-    if s >= 2 {
-        let bases: [Double] = [0, 0, 15, 30, 30, 34, 42]
-        let th = PlantStage.thresholds[s]
-        let sizeIn = 0.55 + 0.45 * smooth(th, th + 0.07, h)
-        let R = bases[s] * sizeIn * (1 + 0.35 * pop) * (1 - 0.12 * w)
+    // flower head: bud first, then ONE flower type that grows from small to big
+    if h >= 0.34 {
+        let bases: [Double: Double] = [3: 30, 4: 30, 5: 34, 6: 38]
+        let stage: Int
+        let R: Double
+        if h < 0.5 {
+            stage = 2
+            R = 15 * (0.55 + 0.45 * smooth(0.34, 0.5, h)) * (1 + 0.35 * pop) * (1 - 0.12 * w)
+        } else {
+            stage = flower
+            let size = 0.42 + 0.9 * smooth(0.5, 1.0, h)
+            R = (bases[Double(flower)] ?? 30) * size * (1 + 0.35 * pop) * (1 - 0.12 * w)
+        }
         var hc = g
-        hc.translateBy(x: top.x, y: top.y)
-        hc.rotate(by: .radians(headAngle))
-        // gentle turning towards the viewer gives the head some depth
+        hc.translateTo(top: top, angle: headAngle)
         let tilt = 0.86 + 0.08 * sin(time * 0.9) * (1 - w)
-        drawFlowerHead(hc, stage: s, R: R, w: w, tilt: tilt)
+        drawFlowerHead(hc, stage: stage, R: R, w: w, tilt: tilt, flower: flower)
     }
 }
 
-private func drawFlowerHead(_ ctx: GraphicsContext, stage: Int, R: Double, w: Double, tilt: Double) {
+private func drawFlowerHead(_ ctx: GraphicsContext, stage: Int, R: Double, w: Double, tilt: Double, flower: Int) {
     var g = ctx
     func t(_ c: RGB) -> RGB { c.mixed(RGB(0.55, 0.42, 0.27), w * 0.75) }
     func tc(_ c: RGB) -> Color { t(c).color }
@@ -163,16 +174,23 @@ private func drawFlowerHead(_ ctx: GraphicsContext, stage: Int, R: Double, w: Do
     }
 
     switch stage {
-    case 2: // bud
+    case 2: // bud, tinted like the flower it will become
+        let bc: RGB
+        switch flower {
+        case 4: bc = RGB(0.90, 0.22, 0.32)
+        case 5: bc = RGB(0.98, 0.62, 0.76)
+        case 6: bc = RGB(0.72, 0.80, 0.22)
+        default: bc = RGB(0.98, 0.86, 0.90)
+        }
         g.translateBy(x: 0, y: -R * 1.2)
         dropShadow(R * 0.8, R * 1.1, 0)
         let rect = CGRect(x: -R * 0.75, y: -R * 1.1, width: R * 1.5, height: R * 2.2)
-        g.fill(Path(ellipseIn: rect), with: rad([tc(RGB(1.0, 0.78, 0.86)), tc(RGB(0.93, 0.45, 0.65)), tc(RGB(0.70, 0.25, 0.45))],
+        g.fill(Path(ellipseIn: rect), with: rad([tc(bc.mixed(white, 0.55)), tc(bc), tc(bc.mixed(black, 0.35))],
                                                CGPoint(x: -R * 0.28, y: -R * 0.4), 1, R * 1.4))
         var seam = Path()
         seam.move(to: CGPoint(x: 0, y: -R * 1.1))
         seam.addQuadCurve(to: CGPoint(x: 0, y: R * 1.1), control: CGPoint(x: R * 0.5, y: 0))
-        g.stroke(seam, with: .color(tc(RGB(0.75, 0.30, 0.50)).opacity(0.8)), lineWidth: 1.4)
+        g.stroke(seam, with: .color(tc(bc.mixed(black, 0.3)).opacity(0.8)), lineWidth: 1.4)
         g.fill(Path(ellipseIn: CGRect(x: -R * 0.42, y: -R * 0.85, width: R * 0.32, height: R * 0.6)),
                with: .color(.white.opacity(0.4)))
         for sd in [-1.0, 1.0] {
@@ -317,6 +335,7 @@ struct PlantPreview: View {
     var wilt: Double = 0
     var cycle = false
     var compact = false   // draw at menu proportions, scaled to fit small cells
+    var flower = 3
 
     var body: some View {
         TimelineView(.animation) { tl in
@@ -324,8 +343,10 @@ struct PlantPreview: View {
             Canvas { ctx, size in
                 var h = health
                 var pop = 0.0
+                var fl = flower
                 if cycle {
                     let period = 16.0
+                    fl = 3 + Int(t / period) % 4
                     let phase = t.truncatingRemainder(dividingBy: period) / period
                     h = 0.08 + 0.92 * min(1, phase / 0.9)
                     let st = PlantStage.index(for: h)
@@ -337,9 +358,9 @@ struct PlantPreview: View {
                     var c = ctx
                     c.translateBy(x: size.width / 2 - 175 * sc, y: 0)
                     c.scaleBy(x: sc, y: sc)
-                    drawPlant(c, rect: CGRect(x: 0, y: 0, width: 350, height: 260), health: h, wilt: wilt, time: t, pop: pop)
+                    drawPlant(c, rect: CGRect(x: 0, y: 0, width: 350, height: 260), health: h, wilt: wilt, time: t, pop: pop, flower: fl)
                 } else {
-                    drawPlant(ctx, rect: CGRect(origin: .zero, size: size), health: h, wilt: wilt, time: t, pop: pop)
+                    drawPlant(ctx, rect: CGRect(origin: .zero, size: size), health: h, wilt: wilt, time: t, pop: pop, flower: fl)
                 }
             }
         }

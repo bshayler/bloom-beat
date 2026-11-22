@@ -215,13 +215,13 @@ struct ResultView: View {
     var body: some View {
         let h = engine.health
         let wilted = engine.displayWilt > 0.5
-        let name = PlantStage.names[PlantStage.index(for: h)]
+        let name = PlantStage.name(PlantStage.index(for: h), flower: engine.flower)
         ZStack {
             SceneryBackground()
             VStack(spacing: 12) {
                 Text("Song complete").font(.system(size: 30, weight: .heavy, design: .rounded)).foregroundStyle(.white)
                     .shadow(color: ink.opacity(0.7), radius: 0, y: 2)
-                PlantPreview(health: h, wilt: engine.displayWilt).frame(height: 270)
+                PlantPreview(health: h, wilt: engine.displayWilt, flower: engine.flower).frame(height: 270)
                 Text(wilted ? "Your \(name.lowercased()) is wilting…" : "Your garden grew a \(name)!")
                     .font(.system(size: 20, weight: .bold, design: .rounded)).foregroundStyle(.white)
                     .shadow(color: ink.opacity(0.7), radius: 2, y: 1)
@@ -329,7 +329,7 @@ struct ShelfView: View {
         Group {
             if let r {
                 Button { selected = r } label: {
-                    PlantPreview(health: r.health, wilt: r.wilt, compact: true)
+                    PlantPreview(health: r.health, wilt: r.wilt, compact: true, flower: r.flowerType)
                 }
                 .buttonStyle(.plain)
                 .contextMenu {
@@ -370,7 +370,7 @@ struct PlantDetail: View {
                 Text(record.isWilted ? "\(record.stageName) (wilted)" : record.stageName)
                     .font(.system(size: 28, weight: .heavy, design: .rounded)).foregroundStyle(.white)
                     .shadow(color: ink.opacity(0.7), radius: 0, y: 2)
-                PlantPreview(health: record.health, wilt: record.wilt).frame(height: 280)
+                PlantPreview(health: record.health, wilt: record.wilt, flower: record.flowerType).frame(height: 280)
                 VStack(alignment: .leading, spacing: 6) {
                     Text("\(record.song?.emoji ?? "") \(record.song?.title ?? "Unknown song")")
                         .font(.system(size: 17, weight: .heavy, design: .rounded))
