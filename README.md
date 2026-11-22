@@ -4,8 +4,8 @@ A plant-themed rhythm game for iPhone, built with SwiftUI. Tap seeds as they rea
 
 - 2, 3, 4 or 5 tracks (Seedling / Sprout / Bloom / Garden)
 - Tap notes, hold-vine notes and multi-lane chords
-- 5 songs, all public-domain compositions or originals, played by an in-app synthesizer (no audio files, royalty free):
-  *Morning Dew*, *Sunbeam Stroll*, *Rain Dance*, *In the Hall of the Mountain King* (Grieg, 1875), *Flight of the Bumblebee* (Rimsky-Korsakov, 1900)
+- 10 songs, all public-domain compositions or originals, played by an in-app synthesizer (no audio files, royalty free):
+  3 originals plus *Mountain King*, *Bumblebee*, *Ode to Joy*, *Twinkle Twinkle*, *Jingle Bells*, *When the Saints Go Marching In* and *Mary Had a Little Lamb*
 
 ## Build
 

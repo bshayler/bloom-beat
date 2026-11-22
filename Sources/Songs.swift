@@ -18,8 +18,9 @@ struct SongSpec: Identifiable {
     let hatStep: Double
     var kind: Kind = .generated
     var leadDecay: Double = 3.2
+    var tune = ""
 
-    enum Kind { case generated, mountainKing, bumblebee }
+    enum Kind { case generated, mountainKing, bumblebee, tune }
 
     static let majT = [0, 4, 7]
     static let minT = [0, 3, 7]
@@ -49,11 +50,66 @@ struct SongSpec: Identifiable {
                  bpm: 138, root: 57, seed: 0,
                  chords: [Chord(root: 0, intervals: minT), Chord(root: 7, intervals: majT),
                           Chord(root: 0, intervals: minT), Chord(root: 5, intervals: minT)],
-                 maxRhythm: 7, kickBeats: [0, 2], hatStep: 0.5, kind: .bumblebee, leadDecay: 7)
+                 maxRhythm: 7, kickBeats: [0, 2], hatStep: 0.5, kind: .bumblebee, leadDecay: 7),
+        SongSpec(id: "ode", title: "Ode to Joy", blurb: "Beethoven, 1824 · public domain", emoji: "🎻",
+                 bpm: 108, root: 60,  seed: 0,
+                 chords: [Chord(root: 0, intervals: majT), Chord(root: 7, intervals: majT),
+                          Chord(root: 0, intervals: majT), Chord(root: 5, intervals: majT)],
+                 maxRhythm: 4, kickBeats: [0, 2], hatStep: 1, kind: .tune, leadDecay: 3,
+                 tune: SongSpec.odeToJoy),
+        SongSpec(id: "twinkle", title: "Twinkle Twinkle Little Star", blurb: "Traditional · public domain", emoji: "⭐",
+                 bpm: 100, root: 60, seed: 0,
+                 chords: [Chord(root: 0, intervals: majT), Chord(root: 5, intervals: majT),
+                          Chord(root: 0, intervals: majT), Chord(root: 7, intervals: majT)],
+                 maxRhythm: 4, kickBeats: [0, 2], hatStep: 1, kind: .tune, leadDecay: 3,
+                 tune: SongSpec.twinkle),
+        SongSpec(id: "jingle", title: "Jingle Bells", blurb: "Pierpont, 1857 · public domain", emoji: "🔔",
+                 bpm: 120, root: 60, seed: 0,
+                 chords: [Chord(root: 0, intervals: majT), Chord(root: 5, intervals: majT),
+                          Chord(root: 0, intervals: majT), Chord(root: 7, intervals: majT)],
+                 maxRhythm: 5, kickBeats: [0, 2], hatStep: 0.5, kind: .tune, leadDecay: 4,
+                 tune: SongSpec.jingleBells),
+        SongSpec(id: "saints", title: "When the Saints Go Marching In", blurb: "Traditional · public domain", emoji: "🎺",
+                 bpm: 132, root: 60, seed: 0,
+                 chords: [Chord(root: 0, intervals: majT), Chord(root: 0, intervals: majT),
+                          Chord(root: 5, intervals: majT), Chord(root: 7, intervals: majT)],
+                 maxRhythm: 6, kickBeats: [0, 1.5, 2], hatStep: 0.5, kind: .tune, leadDecay: 4,
+                 tune: SongSpec.saints),
+        SongSpec(id: "mary", title: "Mary Had a Little Lamb", blurb: "Traditional · public domain", emoji: "🐑",
+                 bpm: 104, root: 60, seed: 0,
+                 chords: [Chord(root: 0, intervals: majT), Chord(root: 7, intervals: majT),
+                          Chord(root: 0, intervals: majT), Chord(root: 5, intervals: majT)],
+                 maxRhythm: 4, kickBeats: [0, 2], hatStep: 1, kind: .tune, leadDecay: 3,
+                 tune: SongSpec.mary)
     ]
+
+    // Tunes: "note:beats" tokens, R = rest. Note names default to octave 4 (C4 = middle C).
+    static let odeToJoy = [
+        "E:1 E:1 F:1 G:1 G:1 F:1 E:1 D:1 C:1 C:1 D:1 E:1 E:1.5 D:.5 D:2",
+        "E:1 E:1 F:1 G:1 G:1 F:1 E:1 D:1 C:1 C:1 D:1 E:1 D:1.5 C:.5 C:2",
+        "D:1 D:1 E:1 C:1 D:1 E:.5 F:.5 E:1 C:1 D:1 E:.5 F:.5 E:1 D:1 C:1 D:1 G3:2",
+        "E:1 E:1 F:1 G:1 G:1 F:1 E:1 D:1 C:1 C:1 D:1 E:1 D:1.5 C:.5 C:2"
+    ].joined(separator: " ")
+    static let twinkle = [
+        "C:1 C:1 G:1 G:1 A:1 A:1 G:2 F:1 F:1 E:1 E:1 D:1 D:1 C:2",
+        "G:1 G:1 F:1 F:1 E:1 E:1 D:2 G:1 G:1 F:1 F:1 E:1 E:1 D:2",
+        "C:1 C:1 G:1 G:1 A:1 A:1 G:2 F:1 F:1 E:1 E:1 D:1 D:1 C:2"
+    ].joined(separator: " ")
+    static let jingleBells = [
+        "E:1 E:1 E:2 E:1 E:1 E:2 E:1 G:1 C:1.5 D:.5 E:4",
+        "F:1 F:1 F:1.5 F:.5 F:1 E:1 E:1 E:.5 E:.5 E:1 D:1 D:1 E:1 D:2 G:2"
+    ].joined(separator: " ")
+    static let saints = [
+        "C:.5 E:.5 F:.5 G:2.5 C:.5 E:.5 F:.5 G:2.5",
+        "C:.5 E:.5 F:.5 G:.5 E:.5 C:.5 E:.5 D:.5 D:.5 E:.5 D:.5 C:.5 C:2"
+    ].joined(separator: " ")
+    static let mary = [
+        "E:1 D:1 C:1 D:1 E:1 E:1 E:2 D:1 D:1 D:2 E:1 G:1 G:2",
+        "E:1 D:1 C:1 D:1 E:1 E:1 E:1 E:1 D:1 D:1 E:1 D:1 C:4"
+    ].joined(separator: " ")
 }
 
-struct MelodyNote { let beat: Double; let midi: Int; let dur: Double }
+struct MelodyNote { let beat: Double; let midi: Int; let dur: Double; var soundShift: Int = 0 }
 
 struct RenderedSong {
     let spec: SongSpec
@@ -192,6 +248,7 @@ enum SongRenderer {
         case .generated: out = generated(spec)
         case .mountainKing: out = mountainKing()
         case .bumblebee: out = bumblebee()
+        case .tune: out = tune(spec.tune)
         }
         let lastBar = Double(bars * 4 - 4)
         out.removeAll { $0.beat >= lastBar }
@@ -213,6 +270,42 @@ enum SongRenderer {
             }
         }
         add(1, 0, 2); add(1, 12, 2); add(2, 0, 4); add(2, 12, 4)
+        return out
+    }
+
+    static func parseTune(_ s: String) -> [(midi: Int?, dur: Double)] {
+        let pcs: [Character: Int] = ["C": 0, "D": 2, "E": 4, "F": 5, "G": 7, "A": 9, "B": 11]
+        var out: [(midi: Int?, dur: Double)] = []
+        for tok in s.split(separator: " ") {
+            let parts = tok.split(separator: ":")
+            guard parts.count == 2, let dur = Double(parts[1]) else { continue }
+            let name = Array(parts[0])
+            if name.first == "R" { out.append((nil, dur)); continue }
+            guard let first = name.first, var pc = pcs[first] else { continue }
+            var octave = 4
+            for ch in name.dropFirst() {
+                if ch == "#" { pc += 1 } else if ch == "b" { pc -= 1 } else if let d = ch.wholeNumberValue { octave = d }
+            }
+            out.append((12 * (octave + 1) + pc, dur))
+        }
+        return out
+    }
+
+    /// Repeats a tune to fill the song; every other pass sounds an octave higher.
+    static func tune(_ s: String) -> [MelodyNote] {
+        let toks = parseTune(s)
+        var out: [MelodyNote] = []
+        var cur = 0.0
+        var cycle = 0
+        while cur < Double(bars * 4) - 4 {
+            for t in toks {
+                if let m = t.midi {
+                    out.append(MelodyNote(beat: cur, midi: m, dur: t.dur, soundShift: cycle % 2 == 1 ? 12 : 0))
+                }
+                cur += t.dur
+            }
+            cycle += 1
+        }
         return out
     }
 
@@ -302,7 +395,7 @@ enum SongRenderer {
         }
 
         for n in mel {
-            let f = midiFreq(n.midi)
+            let f = midiFreq(n.midi + n.soundShift)
             let start = leadIn + n.beat * beat
             if n.dur >= 1.5 {
                 m.tone(Mixer.soft, start: start, dur: n.dur * beat, freq: f, amp: 0.20,
