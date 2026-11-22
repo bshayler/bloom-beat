@@ -394,38 +394,43 @@ enum GameRenderer {
         // intro hint
         if t < 2.2 {
             let a = 1 - smooth(1.6, 2.2, t)
-            drawText(&ctx, "Tap seeds as they reach the pots", at: CGPoint(x: size.width / 2, y: (L.highwayTop + L.hitY) / 2 - 14),
+            drawText(&ctx, "Tap petals as they reach the pots", at: CGPoint(x: size.width / 2, y: (L.highwayTop + L.hitY) / 2 - 14),
                      size: 18, color: .white.opacity(a))
-            drawText(&ctx, "Hold the vines · tap matching seeds together", at: CGPoint(x: size.width / 2, y: (L.highwayTop + L.hitY) / 2 + 14),
+            drawText(&ctx, "Hold the vines · tap paired petals together", at: CGPoint(x: size.width / 2, y: (L.highwayTop + L.hitY) / 2 + 14),
                      size: 14, color: .white.opacity(a * 0.85), weight: .bold)
         }
     }
 
+    /// A falling petal drop: teardrop with a glossy highlight. Hold notes get an extra inner outline.
     static func drawSeed(_ ctx: inout GraphicsContext, at p: CGPoint, r: CGFloat, color: RGB, alpha: Double, hold: Bool) {
         var g = ctx
         g.translateBy(x: p.x, y: p.y)
-        g.fill(Path(ellipseIn: CGRect(x: -r * 0.95, y: -r * 0.8, width: r * 1.9, height: r * 1.9)), with: .color(.black.opacity(0.28 * alpha)))
-        let body = CGRect(x: -r, y: -r, width: r * 2, height: r * 2)
-        g.fill(Path(ellipseIn: body), with: .radialGradient(
-            Gradient(colors: [color.mixed(RGB(1, 1, 1), 0.65).color.opacity(alpha), color.color.opacity(alpha),
-                              color.mixed(RGB(0, 0, 0), 0.38).color.opacity(alpha)]),
-            center: CGPoint(x: -r * 0.32, y: -r * 0.38), startRadius: 1, endRadius: r * 1.45))
-        g.stroke(Path(ellipseIn: body), with: .color(.white.opacity(0.9 * alpha)), lineWidth: hold ? 3.5 : 2.5)
-        g.fill(Path(ellipseIn: CGRect(x: -r * 0.62, y: -r * 0.70, width: r * 0.62, height: r * 0.36)), with: .color(.white.opacity(0.55 * alpha)))
-        if hold {
-            g.stroke(Path(ellipseIn: body.insetBy(dx: r * 0.28, dy: r * 0.28)), with: .color(.white.opacity(0.55 * alpha)), lineWidth: 2)
+        let k = r / 22
+        g.scaleBy(x: k, y: k)
+
+        func drop(_ s: CGFloat) -> Path {
+            var d = Path()
+            d.move(to: CGPoint(x: 0, y: -24 * s))
+            d.addCurve(to: CGPoint(x: 0, y: 22 * s), control1: CGPoint(x: 19 * s, y: -7 * s), control2: CGPoint(x: 20 * s, y: 13 * s))
+            d.addCurve(to: CGPoint(x: 0, y: -24 * s), control1: CGPoint(x: -20 * s, y: 13 * s), control2: CGPoint(x: -19 * s, y: -7 * s))
+            d.closeSubpath()
+            return d
         }
-        var leaf = g
-        leaf.translateBy(x: 0, y: -r * 0.88)
-        for sd in [-1.0, 1.0] {
-            var l = leaf
-            l.rotate(by: .radians(sd * 0.7))
-            var path = Path()
-            path.move(to: .zero)
-            path.addQuadCurve(to: CGPoint(x: 0, y: -r * 0.72), control: CGPoint(x: r * 0.38, y: -r * 0.3))
-            path.addQuadCurve(to: .zero, control: CGPoint(x: -r * 0.38, y: -r * 0.3))
-            l.fill(path, with: .linearGradient(Gradient(colors: [RGB(0.55, 0.92, 0.45).color.opacity(alpha), RGB(0.22, 0.62, 0.28).color.opacity(alpha)]),
-                                               startPoint: CGPoint(x: 0, y: -r * 0.7), endPoint: .zero))
+
+        var shadow = g
+        shadow.translateBy(x: 1.5, y: 3)
+        shadow.fill(drop(1), with: .color(.black.opacity(0.28 * alpha)))
+        g.fill(drop(1), with: .radialGradient(
+            Gradient(colors: [color.mixed(RGB(1, 1, 1), 0.6).color.opacity(alpha), color.color.opacity(alpha),
+                              color.mixed(RGB(0, 0, 0), 0.38).color.opacity(alpha)]),
+            center: CGPoint(x: -6, y: -6), startRadius: 1, endRadius: 34))
+        g.stroke(drop(1), with: .color(.white.opacity(0.92 * alpha)), style: StrokeStyle(lineWidth: hold ? 3.6 : 2.6, lineJoin: .round))
+        var gloss = Path()
+        gloss.move(to: CGPoint(x: -6, y: -8))
+        gloss.addQuadCurve(to: CGPoint(x: -4, y: 11), control: CGPoint(x: -10, y: 2))
+        g.stroke(gloss, with: .color(.white.opacity(0.6 * alpha)), style: StrokeStyle(lineWidth: 3.2, lineCap: .round))
+        if hold {
+            g.stroke(drop(0.55), with: .color(.white.opacity(0.6 * alpha)), lineWidth: 2)
         }
     }
 }
