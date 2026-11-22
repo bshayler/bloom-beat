@@ -20,6 +20,11 @@ struct SongSpec: Identifiable {
     var leadDecay: Double = 3.2
     var tune = ""
     var group = "Originals"
+    var scale: [Int] = [0, 2, 4, 7, 9]   // five-note scale used by generated melodies
+    var leadTable = 0                      // 0 bell/pluck, 1 buzzy saw
+    var snare = false
+    var arp = false
+    var sustain = false                    // long held notes on the third bar of each phrase
 
     enum Kind { case generated, mountainKing, bumblebee, tune }
 
@@ -86,7 +91,7 @@ struct SongSpec: Identifiable {
                  bpm: 84, root: 62, seed: 51,
                  chords: [Chord(root: 0, intervals: majT), Chord(root: 9, intervals: minT),
                           Chord(root: 5, intervals: majT), Chord(root: 7, intervals: majT)],
-                 maxRhythm: 3, kickBeats: [0], hatStep: 1, leadDecay: 2.2),
+                 maxRhythm: 3, kickBeats: [0], hatStep: 1, leadDecay: 2.2, sustain: true),
         SongSpec(id: "firefly", title: "Firefly Rush", blurb: "Quick and twinkly", emoji: "✨",
                  bpm: 148, root: 64, seed: 63,
                  chords: [Chord(root: 9, intervals: minT), Chord(root: 5, intervals: majT),
@@ -120,7 +125,43 @@ struct SongSpec: Identifiable {
                  chords: [Chord(root: 0, intervals: majT), Chord(root: 0, intervals: majT),
                           Chord(root: 7, intervals: majT), Chord(root: 0, intervals: majT)],
                  maxRhythm: 5, kickBeats: [0, 1.5, 2], hatStep: 0.5, kind: .tune, leadDecay: 4,
-                 tune: SongSpec.susanna, group: "Folk & nursery")
+                 tune: SongSpec.susanna, group: "Folk & nursery"),
+        SongSpec(id: "neon", title: "Neon Greenhouse", blurb: "Synthwave · minor", emoji: "🪴",
+                 bpm: 118, root: 57, seed: 101,
+                 chords: [Chord(root: 0, intervals: minT), Chord(root: 8, intervals: majT),
+                          Chord(root: 3, intervals: majT), Chord(root: 10, intervals: majT)],
+                 maxRhythm: 6, kickBeats: [0, 1, 2, 3], hatStep: 0.5, leadDecay: 4, group: "Cool originals",
+                 scale: [0, 3, 5, 7, 10], leadTable: 1, snare: true, arp: true),
+        SongSpec(id: "funk", title: "Venus Flytrap Funk", blurb: "Blues groove · syncopated", emoji: "🕺",
+                 bpm: 102, root: 64, seed: 113,
+                 chords: [Chord(root: 0, intervals: minT), Chord(root: 5, intervals: minT),
+                          Chord(root: 0, intervals: minT), Chord(root: 7, intervals: majT)],
+                 maxRhythm: 6, kickBeats: [0, 1.5, 2.5], hatStep: 0.5, leadDecay: 5, group: "Cool originals",
+                 scale: [0, 3, 5, 6, 7], leadTable: 1, snare: true, sustain: true),
+        SongSpec(id: "sakura", title: "Sakura Drift", blurb: "Serene · Japanese scale", emoji: "🏯",
+                 bpm: 92, root: 62, seed: 127,
+                 chords: [Chord(root: 0, intervals: minT), Chord(root: 8, intervals: majT),
+                          Chord(root: 0, intervals: minT), Chord(root: 7, intervals: majT)],
+                 maxRhythm: 4, kickBeats: [0], hatStep: 1, leadDecay: 2.6, group: "Cool originals",
+                 scale: [0, 2, 3, 7, 8], arp: true, sustain: true),
+        SongSpec(id: "thunder", title: "Thunder Bloom", blurb: "Electro · hard", emoji: "⚡",
+                 bpm: 156, root: 59, seed: 139,
+                 chords: [Chord(root: 0, intervals: minT), Chord(root: 8, intervals: majT),
+                          Chord(root: 10, intervals: majT), Chord(root: 0, intervals: minT)],
+                 maxRhythm: 7, kickBeats: [0, 1, 2, 3], hatStep: 0.5, leadDecay: 6, group: "Cool originals",
+                 scale: [0, 3, 5, 7, 10], leadTable: 1, snare: true, arp: true),
+        SongSpec(id: "rodeo", title: "Cactus Rodeo", blurb: "Country gallop", emoji: "🌵",
+                 bpm: 140, root: 55, seed: 151,
+                 chords: [Chord(root: 0, intervals: majT), Chord(root: 5, intervals: majT),
+                          Chord(root: 0, intervals: majT), Chord(root: 7, intervals: majT)],
+                 maxRhythm: 6, kickBeats: [0, 2], hatStep: 0.5, leadDecay: 6, group: "Cool originals",
+                 snare: true),
+        SongSpec(id: "aurora", title: "Aurora Borealis", blurb: "Floaty · dreamy lydian", emoji: "🌌",
+                 bpm: 76, root: 60, seed: 163,
+                 chords: [Chord(root: 0, intervals: majT), Chord(root: 2, intervals: majT),
+                          Chord(root: 0, intervals: majT), Chord(root: 9, intervals: minT)],
+                 maxRhythm: 3, kickBeats: [0], hatStep: 1, leadDecay: 2, group: "Cool originals",
+                 scale: [0, 2, 4, 6, 9], arp: true, sustain: true)
     ]
 
     // Tunes: "note:beats" tokens, R = rest. Note names default to octave 4 (C4 = middle C).
@@ -221,6 +262,7 @@ final class Mixer {
     static let pure = makeTable([1])
     static let soft = makeTable([1, 0.35, 0.12])
     static let glock = makeTable([1, 0, 0.30, 0, 0.12])
+    static let saw = makeTable([1, 0.5, 0.33, 0.25, 0.2, 0.167, 0.143, 0.125])
 
     func tone(_ table: [Float], start: Double, dur: Double, freq: Double, amp: Float,
               attack: Double, decay: Double, release: Double) {
@@ -271,6 +313,20 @@ final class Mixer {
         }
     }
 
+    func snare(start: Double, amp: Float) {
+        let sr = Mixer.sr
+        let startIdx = Int(start * sr)
+        let n = Int(0.16 * sr)
+        for i in 0..<n {
+            let idx = startIdx + i
+            if idx >= buf.count { break }
+            let t = Double(i) / sr
+            let noise = Float.random(in: -1...1, using: &rng)
+            let body = Float(sin(2 * Double.pi * 190 * t) * exp(-t * 30))
+            buf[idx] += (noise * 0.7 * Float(exp(-t * 22)) + body * 0.5) * amp
+        }
+    }
+
     func hat(start: Double, amp: Float) {
         let sr = Mixer.sr
         let startIdx = Int(start * sr)
@@ -304,7 +360,7 @@ enum SongRenderer {
     static let bars = 32
 
     static func melodyMidi(_ spec: SongSpec, degree d: Int) -> Int {
-        spec.root + 12 * (d / 5) + pent[d % 5]
+        spec.root + 12 * (d / 5) + spec.scale[d % 5]
     }
 
     static func melody(for spec: SongSpec) -> [MelodyNote] {
@@ -403,7 +459,7 @@ enum SongRenderer {
         for _ in 0..<4 {
             var notes: [MelodyNote] = []
             for bar in 0..<4 {
-                let r = allowed.randomElement(using: &rng)!
+                let r = (spec.sustain && bar == 2) ? [0, 2] : allowed.randomElement(using: &rng)!
                 for (i, off) in r.enumerated() {
                     let next = i + 1 < r.count ? r[i + 1] : 4.0
                     let step = [-2, -1, -1, 0, 1, 1, 2].randomElement(using: &rng)!
@@ -448,8 +504,19 @@ enum SongRenderer {
                 m.tone(Mixer.soft, start: barStart + off * beat, dur: 0.8 * beat, freq: midiFreq(note),
                        amp: 0.16, attack: 0.01, decay: 2.5, release: 0.12)
             }
+            if spec.arp && bar >= 1 {
+                let tones = chord.intervals.map { spec.root + 12 + chord.root + $0 } + [spec.root + 24 + chord.root]
+                for i in 0..<8 {
+                    m.tone(Mixer.pure, start: barStart + Double(i) * 0.5 * beat, dur: 0.3 * beat,
+                           freq: midiFreq(tones[i % tones.count]), amp: 0.05, attack: 0.004, decay: 9, release: 0.1)
+                }
+            }
             if bar >= 1 {
                 for kb in spec.kickBeats { m.kick(start: barStart + kb * beat, amp: 0.30) }
+                if spec.snare {
+                    m.snare(start: barStart + 1 * beat, amp: 0.20)
+                    m.snare(start: barStart + 3 * beat, amp: 0.20)
+                }
                 var b = 0.0
                 while b < 4 {
                     let accent: Float = b.truncatingRemainder(dividingBy: 1) == 0 ? 0.20 : 0.11
@@ -466,8 +533,8 @@ enum SongRenderer {
                 m.tone(Mixer.soft, start: start, dur: n.dur * beat, freq: f, amp: 0.20,
                        attack: 0.02, decay: 0.7, release: 0.35)
             } else {
-                m.tone(Mixer.glock, start: start, dur: min(n.dur * beat, 1.4), freq: f, amp: 0.22,
-                       attack: 0.004, decay: spec.leadDecay, release: 0.3)
+                m.tone(spec.leadTable == 1 ? Mixer.saw : Mixer.glock, start: start, dur: min(n.dur * beat, 1.4), freq: f,
+                       amp: spec.leadTable == 1 ? 0.13 : 0.22, attack: 0.004, decay: spec.leadDecay, release: 0.3)
                 m.tone(Mixer.pure, start: start, dur: n.dur * beat * 0.6, freq: f * 2, amp: 0.05,
                        attack: 0.003, decay: 9, release: 0.15)
             }

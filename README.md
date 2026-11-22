@@ -4,8 +4,8 @@ A plant-themed rhythm game for iPhone, built with SwiftUI. Tap seeds as they rea
 
 - 2, 3, 4 or 5 tracks (Seedling / Sprout / Bloom / Garden)
 - Tap notes, hold-vine notes and multi-lane chords
-- 17 songs, all public-domain compositions or originals, played by an in-app synthesizer (no audio files, royalty free):
-  6 originals (from gentle to very fast) plus classical pieces (*Mountain King*, *Bumblebee*, *Ode to Joy*) and folk and nursery tunes (*Twinkle Twinkle*, *Jingle Bells*, *When the Saints Go Marching In*, *Mary Had a Little Lamb*, *Row Row Row Your Boat*, *Hot Cross Buns*, *London Bridge*, *Oh! Susanna*)
+- 23 songs, all public-domain compositions or originals, played by an in-app synthesizer (no audio files, royalty free):
+  12 originals (gentle ambient to hard electro, with minor, blues, Japanese and lydian scales) plus classical pieces (*Mountain King*, *Bumblebee*, *Ode to Joy*) and folk and nursery tunes (*Twinkle Twinkle*, *Jingle Bells*, *When the Saints Go Marching In*, *Mary Had a Little Lamb*, *Row Row Row Your Boat*, *Hot Cross Buns*, *London Bridge*, *Oh! Susanna*)
 
 ## Build
 
