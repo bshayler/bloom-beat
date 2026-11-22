@@ -51,12 +51,13 @@ final class GameEngine: NSObject, ObservableObject {
             DispatchQueue.main.async { self.start() }
         }
         if ProcessInfo.processInfo.arguments.contains("-seedshelf") && shelf.isEmpty {
-            let ids = SongSpec.all.map { $0.id }
-            let samples: [(Double, Double, Int, String)] = [(0.97, 0, 98200, "S"), (0.85, 0, 61400, "A"), (0.72, 0, 40100, "B"),
-                                                           (0.58, 0, 25300, "C"), (0.40, 0, 14100, "C"), (0.05, 0.9, 3200, "D"), (0.30, 0.8, 5100, "D")]
+            let samples: [(String, Int, Double, Double, Int, String)] = [
+                ("ode", 5, 0.98, 0, 171_300, "S"), ("sun", 4, 0.94, 0, 148_900, "S"), ("dew", 3, 0.90, 0, 120_400, "A"),
+                ("rain", 4, 0.80, 0, 96_700, "A"), ("sakura", 5, 0.70, 0, 77_200, "B"), ("rodeo", 3, 0.56, 0, 52_600, "B"),
+                ("twinkle", 2, 0.42, 0, 31_800, "C"), ("king", 4, 0.26, 0, 18_400, "C"), ("mary", 3, 0.07, 0.9, 4_200, "D")]
             for (i, x) in samples.enumerated() {
-                shelf.append(PlantRecord(songID: ids[i % ids.count], lanes: 2 + i % 4, health: x.0, wilt: x.1, score: x.2,
-                                         grade: x.3, maxCombo: 20 + i * 11, date: Date().addingTimeInterval(Double(-i) * 3600)))
+                shelf.append(PlantRecord(songID: x.0, lanes: x.1, health: x.2, wilt: x.3, score: x.4,
+                                         grade: x.5, maxCombo: 30 + i * 13, date: Date().addingTimeInterval(Double(-i) * 3600)))
             }
         }
     }
@@ -99,6 +100,7 @@ final class GameEngine: NSObject, ObservableObject {
     var lastStage = 0
     var stageChangeTime = -10.0
     var currentSong: RenderedSong?
+    var markerTime = -10.0   // debug: set when a song starts with the -marker launch flag
     var flower = 3
     var beatSec = 0.5
     var activeHolds: [Int] = []
@@ -192,6 +194,9 @@ final class GameEngine: NSObject, ObservableObject {
         counts = [0, 0, 0, 0]
         health = 0.15; displayHealth = 0.15; displayWilt = 0; recentMiss = 0
         gain = 1.3 / Double(max(1, notes.count))
+        let launchArgs = ProcessInfo.processInfo.arguments
+        if launchArgs.contains("-fastgrow") { gain *= 2.4 }
+        markerTime = launchArgs.contains("-marker") ? CACurrentMediaTime() : -10
         lastJudgmentTime = -10
         particles = []
         laneGlow = [Double](repeating: 0, count: 5)

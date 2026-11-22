@@ -19,3 +19,4 @@ open BloomBeat.xcodeproj
 Launch with `-autoplay` to have the game hit every note (handy for testing).
 Launch with `-seedshelf` to fill the plant shelf with sample plants.
 Other debug flags: `-autostart <songId> <lanes>` starts a song directly (e.g. `-autostart neon 5`), `-showshelf` opens the shelf.
+Debug flags for recording: `-fastgrow` (plant grows ~2.4x faster) and `-marker` (flashes a bright frame when a song starts).

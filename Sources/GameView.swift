@@ -391,6 +391,11 @@ enum GameRenderer {
             drawText(&jc, e.lastJudgment.label, at: .zero, size: 32, color: e.lastJudgment.color.color.opacity(a))
         }
 
+        // debug: a short bright flash marks the exact start of the song in screen recordings
+        if wallNow - e.markerTime < 0.3 {
+            ctx.fill(Path(CGRect(origin: .zero, size: size)), with: .color(Color(red: 1, green: 0, blue: 1)))
+        }
+
         // intro hint
         if t < 2.2 {
             let a = 1 - smooth(1.6, 2.2, t)
