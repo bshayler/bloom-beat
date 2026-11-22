@@ -1,4 +1,4 @@
-# Photosynth 🌱
+# Seedling Symphony 🌱
 
 A plant-themed rhythm game for iPhone, built with SwiftUI. Tap seeds as they reach the pots; hit well and your plant grows from a seedling into a daisy, tulip, cherry blossom and sunflower. Miss and it wilts.
 
@@ -13,7 +13,7 @@ Requires Xcode and [XcodeGen](https://github.com/yonaskolb/XcodeGen).
 
 ```bash
 xcodegen generate
-open Photosynth.xcodeproj
+open SeedlingSymphony.xcodeproj
 ```
 
 Launch with `-autoplay` to have the game hit every note (handy for testing).

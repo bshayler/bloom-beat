@@ -1,20 +1,20 @@
-name: Photosynth
+name: SeedlingSymphony
 options:
-  bundleIdPrefix: com.photosynth
+  bundleIdPrefix: com.seedlingsymphony
   deploymentTarget:
     iOS: "17.0"
 targets:
-  Photosynth:
+  SeedlingSymphony:
     type: application
     platform: iOS
     sources: [Sources]
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.photosynth.game
+        PRODUCT_BUNDLE_IDENTIFIER: com.seedlingsymphony.game
         SWIFT_VERSION: "5.0"
         SWIFT_OPTIMIZATION_LEVEL: "-O"
         GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_KEY_CFBundleDisplayName: "Photosynth"
+        INFOPLIST_KEY_CFBundleDisplayName: "Seedling Symphony"
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES

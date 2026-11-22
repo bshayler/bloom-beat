@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct PhotosynthApp: App {
+struct SeedlingSymphonyApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView().preferredColorScheme(.light)
