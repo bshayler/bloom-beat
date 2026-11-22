@@ -11,6 +11,7 @@
 		3618DFC2D39CFC7096B6A431 /* Screens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 973CC0743CC8FF6302201268 /* Screens.swift */; };
 		42346939A8440FE1F5367CF9 /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB527BC74B6F4FDFC519C3B6 /* GameView.swift */; };
 		449AFDF8405CBE95129C6167 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4162FAD02B267AE04834806D /* Models.swift */; };
+		7D1ED302CF72554E9F36A795 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 81A279855687042F230EECAD /* Assets.xcassets */; };
 		86FDFE5662471F3181155145 /* BloomBeatApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA038348B8F63A2A8A2E030 /* BloomBeatApp.swift */; };
 		AAE84740E4A13F66DA611969 /* GameEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C67DE041BD388C4FC085A964 /* GameEngine.swift */; };
 		E7E2A7EBD726818E1513CFD0 /* PlantArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EA7BC273E41B33FE5368E98 /* PlantArt.swift */; };
@@ -19,6 +20,7 @@
 /* Begin PBXFileReference section */
 		4162FAD02B267AE04834806D /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		7EA7BC273E41B33FE5368E98 /* PlantArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlantArt.swift; sourceTree = "<group>"; };
+		81A279855687042F230EECAD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		973CC0743CC8FF6302201268 /* Screens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Screens.swift; sourceTree = "<group>"; };
 		AD3A146762A1536B708489FE /* BloomBeat.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = BloomBeat.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BAA038348B8F63A2A8A2E030 /* BloomBeatApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BloomBeatApp.swift; sourceTree = "<group>"; };
@@ -47,6 +49,7 @@
 		A868E2BD9DFF4F8D00CD0341 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				81A279855687042F230EECAD /* Assets.xcassets */,
 				BAA038348B8F63A2A8A2E030 /* BloomBeatApp.swift */,
 				C67DE041BD388C4FC085A964 /* GameEngine.swift */,
 				BB527BC74B6F4FDFC519C3B6 /* GameView.swift */,
@@ -66,6 +69,7 @@
 			buildConfigurationList = 86A4858370922AB4E9DBC4D8 /* Build configuration list for PBXNativeTarget "BloomBeat" */;
 			buildPhases = (
 				842A40CEB4EB7BF88FFABD69 /* Sources */,
+				56F05DD9BC550B41C6247BCA /* Resources */,
 			);
 			buildRules = (
 			);
@@ -110,6 +114,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		56F05DD9BC550B41C6247BCA /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7D1ED302CF72554E9F36A795 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		842A40CEB4EB7BF88FFABD69 /* Sources */ = {
