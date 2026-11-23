@@ -25,22 +25,26 @@ struct SongSpec: Identifiable {
     var snare = false
     var arp = false
     var sustain = false                    // long held notes on the third bar of each phrase
+    var hard = false                       // hard-mode song: sixteenth-note rhythms, tighter note spacing
 
-    enum Kind { case generated, mountainKing, bumblebee, tune }
+    enum Kind { case generated, mountainKing, bumblebee, tune, perpetual }
 
     static let majT = [0, 4, 7]
     static let minT = [0, 3, 7]
+    static let maj7T = [0, 4, 7, 11]
+    static let min7T = [0, 3, 7, 10]
+    static let dom7T = [0, 4, 7, 10]
 
     static let all: [SongSpec] = [
         SongSpec(id: "dew", title: "Morning Dew", blurb: "Gentle and slow", emoji: "🌱",
                  bpm: 92, root: 60, seed: 11,
-                 chords: [Chord(root: 0, intervals: majT), Chord(root: 9, intervals: minT),
-                          Chord(root: 5, intervals: majT), Chord(root: 7, intervals: majT)],
+                 chords: [Chord(root: 0, intervals: maj7T), Chord(root: 9, intervals: min7T),
+                          Chord(root: 5, intervals: maj7T), Chord(root: 7, intervals: dom7T)],
                  maxRhythm: 4, kickBeats: [0, 2], hatStep: 1),
         SongSpec(id: "sun", title: "Sunbeam Stroll", blurb: "Bright and bouncy", emoji: "🌻",
                  bpm: 112, root: 55, seed: 23,
-                 chords: [Chord(root: 0, intervals: majT), Chord(root: 7, intervals: majT),
-                          Chord(root: 9, intervals: minT), Chord(root: 5, intervals: majT)],
+                 chords: [Chord(root: 0, intervals: majT), Chord(root: 7, intervals: dom7T),
+                          Chord(root: 9, intervals: min7T), Chord(root: 5, intervals: maj7T)],
                  maxRhythm: 6, kickBeats: [0, 1.5, 2], hatStep: 0.5),
         SongSpec(id: "rain", title: "Rain Dance", blurb: "Fast and sparkly", emoji: "🌧️",
                  bpm: 128, root: 62, seed: 37,
@@ -89,8 +93,8 @@ struct SongSpec: Identifiable {
                  tune: SongSpec.mary, group: "Folk & nursery"),
         SongSpec(id: "moon", title: "Moonlit Meadow", blurb: "Dreamy and slow", emoji: "🌙",
                  bpm: 84, root: 62, seed: 51,
-                 chords: [Chord(root: 0, intervals: majT), Chord(root: 9, intervals: minT),
-                          Chord(root: 5, intervals: majT), Chord(root: 7, intervals: majT)],
+                 chords: [Chord(root: 0, intervals: maj7T), Chord(root: 9, intervals: min7T),
+                          Chord(root: 5, intervals: maj7T), Chord(root: 7, intervals: dom7T)],
                  maxRhythm: 3, kickBeats: [0], hatStep: 1, leadDecay: 2.2, sustain: true),
         SongSpec(id: "firefly", title: "Firefly Rush", blurb: "Quick and twinkly", emoji: "✨",
                  bpm: 148, root: 64, seed: 63,
@@ -128,14 +132,14 @@ struct SongSpec: Identifiable {
                  tune: SongSpec.susanna, group: "Folk & nursery"),
         SongSpec(id: "neon", title: "Neon Greenhouse", blurb: "Synthwave · minor", emoji: "🪴",
                  bpm: 118, root: 57, seed: 101,
-                 chords: [Chord(root: 0, intervals: minT), Chord(root: 8, intervals: majT),
-                          Chord(root: 3, intervals: majT), Chord(root: 10, intervals: majT)],
+                 chords: [Chord(root: 0, intervals: min7T), Chord(root: 8, intervals: maj7T),
+                          Chord(root: 3, intervals: maj7T), Chord(root: 10, intervals: dom7T)],
                  maxRhythm: 6, kickBeats: [0, 1, 2, 3], hatStep: 0.5, leadDecay: 4, group: "Cool originals",
                  scale: [0, 3, 5, 7, 10], leadTable: 1, snare: true, arp: true),
         SongSpec(id: "funk", title: "Venus Flytrap Funk", blurb: "Blues groove · syncopated", emoji: "🕺",
                  bpm: 102, root: 64, seed: 113,
-                 chords: [Chord(root: 0, intervals: minT), Chord(root: 5, intervals: minT),
-                          Chord(root: 0, intervals: minT), Chord(root: 7, intervals: majT)],
+                 chords: [Chord(root: 0, intervals: min7T), Chord(root: 5, intervals: min7T),
+                          Chord(root: 0, intervals: min7T), Chord(root: 7, intervals: dom7T)],
                  maxRhythm: 6, kickBeats: [0, 1.5, 2.5], hatStep: 0.5, leadDecay: 5, group: "Cool originals",
                  scale: [0, 3, 5, 6, 7], leadTable: 1, snare: true, sustain: true),
         SongSpec(id: "sakura", title: "Sakura Drift", blurb: "Serene · Japanese scale", emoji: "🏯",
@@ -158,10 +162,59 @@ struct SongSpec: Identifiable {
                  snare: true),
         SongSpec(id: "aurora", title: "Aurora Borealis", blurb: "Floaty · dreamy lydian", emoji: "🌌",
                  bpm: 76, root: 60, seed: 163,
-                 chords: [Chord(root: 0, intervals: majT), Chord(root: 2, intervals: majT),
-                          Chord(root: 0, intervals: majT), Chord(root: 9, intervals: minT)],
+                 chords: [Chord(root: 0, intervals: maj7T), Chord(root: 2, intervals: dom7T),
+                          Chord(root: 0, intervals: maj7T), Chord(root: 9, intervals: min7T)],
                  maxRhythm: 3, kickBeats: [0], hatStep: 1, leadDecay: 2, group: "Cool originals",
-                 scale: [0, 2, 4, 6, 9], arp: true, sustain: true)
+                 scale: [0, 2, 4, 6, 9], arp: true, sustain: true),
+        // MARK: Hard mode
+        SongSpec(id: "thorn", title: "Razor Thorn", blurb: "Hard · metal gallop", emoji: "🌹",
+                 bpm: 180, root: 52, seed: 201,
+                 chords: [Chord(root: 0, intervals: min7T), Chord(root: 8, intervals: maj7T),
+                          Chord(root: 3, intervals: majT), Chord(root: 10, intervals: majT)],
+                 maxRhythm: 10, kickBeats: [0, 1, 2, 3], hatStep: 0.5, leadDecay: 6, group: "Hard mode",
+                 scale: [0, 3, 5, 7, 10], leadTable: 1, snare: true, hard: true),
+        SongSpec(id: "bramble", title: "Bramble Rush", blurb: "Hard · Andalusian sprint", emoji: "🥀",
+                 bpm: 176, root: 57, seed: 211,
+                 chords: [Chord(root: 0, intervals: minT), Chord(root: 10, intervals: majT),
+                          Chord(root: 8, intervals: majT), Chord(root: 7, intervals: majT)],
+                 maxRhythm: 11, kickBeats: [0, 1, 2, 3], hatStep: 0.5, leadDecay: 6, group: "Hard mode",
+                 scale: [0, 2, 3, 7, 8], leadTable: 1, snare: true, hard: true),
+        SongSpec(id: "cyclone", title: "Cyclone Canopy", blurb: "Hard · storm of sixteenths", emoji: "🌪️",
+                 bpm: 186, root: 62, seed: 223,
+                 chords: [Chord(root: 0, intervals: minT), Chord(root: 8, intervals: majT),
+                          Chord(root: 10, intervals: majT), Chord(root: 7, intervals: minT)],
+                 maxRhythm: 10, kickBeats: [0, 1, 2, 3], hatStep: 0.5, leadDecay: 6, group: "Hard mode",
+                 scale: [0, 3, 5, 7, 10], leadTable: 1, snare: true, hard: true),
+        SongSpec(id: "nightshade", title: "Nightshade Nocturne", blurb: "Hard · dark and dramatic", emoji: "🍇",
+                 bpm: 172, root: 60, seed: 233,
+                 chords: [Chord(root: 0, intervals: min7T), Chord(root: 8, intervals: maj7T),
+                          Chord(root: 7, intervals: dom7T), Chord(root: 0, intervals: min7T)],
+                 maxRhythm: 11, kickBeats: [0, 1, 2, 3], hatStep: 0.5, leadDecay: 5, group: "Hard mode",
+                 scale: [0, 2, 3, 7, 8], leadTable: 1, snare: true, hard: true),
+        SongSpec(id: "gallop", title: "Wild Garlic Gallop", blurb: "Hard · country on fire", emoji: "🧄",
+                 bpm: 184, root: 55, seed: 241,
+                 chords: [Chord(root: 0, intervals: majT), Chord(root: 7, intervals: majT),
+                          Chord(root: 9, intervals: minT), Chord(root: 5, intervals: majT)],
+                 maxRhythm: 10, kickBeats: [0, 1, 2, 3], hatStep: 0.5, leadDecay: 7, group: "Hard mode",
+                 snare: true, hard: true),
+        SongSpec(id: "hydra", title: "Hydra Hydrangea", blurb: "Hard · blues-rock blitz", emoji: "💠",
+                 bpm: 178, root: 64, seed: 257,
+                 chords: [Chord(root: 0, intervals: min7T), Chord(root: 3, intervals: majT),
+                          Chord(root: 5, intervals: dom7T), Chord(root: 7, intervals: dom7T)],
+                 maxRhythm: 11, kickBeats: [0, 1, 2, 3], hatStep: 0.5, leadDecay: 6, group: "Hard mode",
+                 scale: [0, 3, 5, 6, 7], leadTable: 1, snare: true, hard: true),
+        SongSpec(id: "overgrowth", title: "Overgrowth", blurb: "Hard · endless arpeggios", emoji: "🌿",
+                 bpm: 168, root: 57, seed: 269,
+                 chords: [Chord(root: 0, intervals: minT), Chord(root: 5, intervals: majT),
+                          Chord(root: 7, intervals: dom7T), Chord(root: 0, intervals: minT)],
+                 maxRhythm: 4, kickBeats: [0, 2], hatStep: 1, kind: .perpetual, leadDecay: 7, group: "Hard mode",
+                 hard: true),
+        SongSpec(id: "turkish", title: "Turkish March", blurb: "Mozart, 1783 · public domain · hard", emoji: "🥁",
+                 bpm: 144, root: 57, seed: 0,
+                 chords: [Chord(root: 0, intervals: minT), Chord(root: 7, intervals: dom7T),
+                          Chord(root: 0, intervals: minT), Chord(root: 7, intervals: dom7T)],
+                 maxRhythm: 7, kickBeats: [0, 2], hatStep: 0.5, kind: .tune, leadDecay: 6,
+                 tune: SongSpec.turkishMarch, group: "Hard mode", hard: true)
     ]
 
     // Tunes: "note:beats" tokens, R = rest. Note names default to octave 4 (C4 = middle C).
@@ -209,6 +262,13 @@ struct SongSpec: Identifiable {
         "E:.5 E:.5 D:1 D:1 C:1",
         "C:3 R:1"
     ].joined(separator: " ")
+    static let turkishMarch = [
+        "B:.25 A:.25 G#:.25 A:.25 C5:1 D5:.25 C5:.25 B:.25 C5:.25 E5:1",
+        "F5:.25 E5:.25 D#5:.25 E5:.25 B5:.25 A5:.25 G#5:.25 A5:.25",
+        "B5:.25 A5:.25 G#5:.25 A5:.25 C6:1",
+        "A5:1 G#5:.5 A5:.5 E5:1 C5:1",
+        "B:.5 C5:.5 D5:.5 E5:.5 F5:.5 E5:.5 D5:.5 C5:.5"
+    ].joined(separator: " ")
     static let mary = [
         "E:1 D:1 C:1 D:1 E:1 E:1 E:2 D:1 D:1 D:2 E:1 G:1 G:2",
         "E:1 D:1 C:1 D:1 E:1 E:1 E:1 E:1 D:1 D:1 E:1 D:1 C:4"
@@ -247,7 +307,12 @@ enum SongRenderer {
         [0, 1, 2, 2.5, 3, 3.5],
         [0, 0.5, 1, 1.5, 2, 3],
         [0, 1.5, 2, 3],
-        [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5]
+        [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5],
+        // hard-mode templates with sixteenths
+        [0, 0.25, 0.5, 1, 1.5, 2, 2.25, 2.5, 3, 3.5],
+        [0, 0.5, 0.75, 1, 1.5, 1.75, 2, 2.5, 2.75, 3, 3.5, 3.75],
+        [0, 0.25, 0.5, 0.75, 1, 1.5, 2, 2.25, 2.5, 2.75, 3, 3.5],
+        [0, 0.5, 1, 1.25, 1.5, 2, 2.5, 3, 3.25, 3.5, 3.75]
     ]
     static let leadIn = 2.5
     static let bars = 32
@@ -263,6 +328,7 @@ enum SongRenderer {
         case .mountainKing: out = mountainKing()
         case .bumblebee: out = bumblebee()
         case .tune: out = tune(spec.tune)
+        case .perpetual: out = perpetual(spec)
         }
         let lastBar = Double(bars * 4 - 4)
         out.removeAll { $0.beat >= lastBar }
@@ -344,25 +410,71 @@ enum SongRenderer {
         return out
     }
 
+    /// Nearest scale degree (within two steps) whose note belongs to the chord playing in `bar`.
+    static func snapToChord(_ spec: SongSpec, degree d: Int, bar: Int) -> Int {
+        let chord = spec.chords[bar % spec.chords.count]
+        func isTone(_ deg: Int) -> Bool {
+            let pc = ((melodyMidi(spec, degree: deg) - spec.root - chord.root) % 12 + 12) % 12
+            return chord.intervals.contains(pc)
+        }
+        for off in [0, 1, -1, 2, -2] {
+            let c = d + off
+            if c >= 0 && c <= 9 && isTone(c) { return c }
+        }
+        return d
+    }
+
+    /// Baroque-style perpetual motion: sixteenth-note arpeggios that sweep up and down through each chord.
+    static func perpetual(_ spec: SongSpec) -> [MelodyNote] {
+        var rng = SplitMix64(state: spec.seed)
+        var out: [MelodyNote] = []
+        for bar in 0..<bars {
+            let chord = spec.chords[bar % spec.chords.count]
+            let base = spec.root + chord.root
+            var pool: [Int] = []
+            for oct in 0..<2 { for iv in chord.intervals { pool.append(base + iv + 12 * oct) } }
+            pool.append(base + 24)
+            let b = Double(bar * 4)
+            var idx = bar % 2 == 0 ? 0 : pool.count - 1
+            var dir = bar % 2 == 0 ? 1 : -1
+            let steps = bar % 4 == 3 ? 12 : 16          // every fourth bar ends on a held quarter note
+            for i in 0..<steps {
+                out.append(MelodyNote(beat: b + Double(i) * 0.25, midi: pool[idx], dur: 0.25))
+                if idx + dir > pool.count - 1 || idx + dir < 0 { dir = -dir }
+                idx += dir
+                if i % 4 == 3 && Bool.random(using: &rng) {       // an occasional skip keeps it from being a plain scale
+                    let jump = idx + dir * 2
+                    if jump >= 0 && jump < pool.count { idx = jump }
+                }
+            }
+            if steps == 12 { out.append(MelodyNote(beat: b + 3, midi: pool[idx], dur: 1)) }
+        }
+        return out
+    }
+
     static func generated(_ spec: SongSpec) -> [MelodyNote] {
         var rng = SplitMix64(state: spec.seed)
         let allowed = Array(rhythms.prefix(spec.maxRhythm))
         var phrases: [[MelodyNote]] = []
         var d = 4
-        for _ in 0..<4 {
+        for pidx in 0..<4 {
             var notes: [MelodyNote] = []
             for bar in 0..<4 {
                 let longBar: [Double] = spec.bpm >= 138 ? [0] : [0, 2]
-                let r = (spec.sustain || spec.kind == .generated) && bar == 2 ? longBar : allowed.randomElement(using: &rng)!
+                // hard songs keep a held vine only in every other phrase so the rest stays busy
+                let wantsLong = spec.hard ? (bar == 2 && pidx % 2 == 0) : ((spec.sustain || spec.kind == .generated) && bar == 2)
+                let r = wantsLong ? longBar : allowed.randomElement(using: &rng)!
                 for (i, off) in r.enumerated() {
                     let next = i + 1 < r.count ? r[i + 1] : 4.0
                     let step = [-2, -1, -1, 0, 1, 1, 2].randomElement(using: &rng)!
                     d = max(0, min(9, d + step))
+                    // strong beats land on a tone of the current chord, so the tune actually follows the harmony
+                    if off == 0 || off == 2 { d = snapToChord(spec, degree: d, bar: bar) }
                     notes.append(MelodyNote(beat: Double(bar * 4) + off, midi: melodyMidi(spec, degree: d), dur: next - off))
                 }
             }
             if let last = notes.popLast() {
-                let end = [0, 2, 4, 5, 7].randomElement(using: &rng)!
+                let end = snapToChord(spec, degree: [0, 2, 4, 5, 7].randomElement(using: &rng)!, bar: 3)
                 notes.append(MelodyNote(beat: last.beat, midi: melodyMidi(spec, degree: end), dur: last.dur))
                 d = end
             }
@@ -410,6 +522,7 @@ enum ChartBuilder {
         let hi = song.melody.map { $0.midi }.max() ?? 1
         let range = max(1, hi - lo + 1)
         var busy = [Double](repeating: -10, count: lanes)
+        let gap = song.spec.hard ? 0.07 : 0.12      // hard songs allow much tighter repeats in a lane
         var out: [GNote] = []
         for m in song.melody.sorted(by: { $0.beat < $1.beat }) {
             let frac = m.beat.truncatingRemainder(dividingBy: 1)
@@ -419,7 +532,7 @@ enum ChartBuilder {
             if lanes == 3 && frac != 0 && !(inBar == 0.5 || inBar == 2.5) { continue }
             let lane = min(lanes - 1, (m.midi - lo) * lanes / range)
             let time = song.leadIn + m.beat * beatSec
-            if time < busy[lane] + 0.12 { continue }
+            if time < busy[lane] + gap { continue }
             let dur = m.dur >= 1.5 ? max(0.5, m.dur * beatSec - 0.15) : 0
             out.append(GNote(time: time, lane: lane, dur: dur))
             busy[lane] = time + dur

@@ -101,7 +101,9 @@ enum PlantStage {
         "dew": 3, "sun": 6, "rain": 4, "moon": 3, "firefly": 5, "petal": 5,
         "neon": 4, "funk": 6, "sakura": 5, "thunder": 4, "rodeo": 6, "aurora": 3,
         "king": 4, "bee": 6, "ode": 5, "twinkle": 3, "jingle": 4, "saints": 6,
-        "mary": 3, "row": 4, "buns": 6, "london": 5, "susanna": 6
+        "mary": 3, "row": 4, "buns": 6, "london": 5, "susanna": 6,
+        "thorn": 4, "bramble": 3, "cyclone": 5, "nightshade": 4, "gallop": 6, "hydra": 3,
+        "overgrowth": 5, "turkish": 6
     ]
 
     static func flower(for songID: String) -> Int { songFlowers[songID] ?? 3 }
