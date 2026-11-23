@@ -4,8 +4,8 @@ A plant-themed rhythm game for iPhone, built with SwiftUI. Tap seeds as they rea
 
 - 2, 3, 4 or 5 tracks (Seedling / Sprout / Bloom / Garden)
 - Tap notes, hold-vine notes and multi-lane chords. Every song grows one flower (daisy, tulip, cherry blossom or sunflower) from a seedling to a big bloom
-- 23 songs, all public-domain compositions or originals, played by an in-app synthesizer (no audio files, royalty free):
-  12 originals (gentle ambient to hard electro, with minor, blues, Japanese and lydian scales) plus classical pieces (*Mountain King*, *Bumblebee*, *Ode to Joy*) and folk and nursery tunes (*Twinkle Twinkle*, *Jingle Bells*, *When the Saints Go Marching In*, *Mary Had a Little Lamb*, *Row Row Row Your Boat*, *Hot Cross Buns*, *London Bridge*, *Oh! Susanna*)
+- 31 songs, all public-domain compositions or originals, played by an in-app synthesizer (no audio files, royalty free). The band plays voice-led chords with walking bass, fills, stabs and strums, and generated melodies follow the chord changes:
+  12 originals (gentle ambient to hard electro, with minor, blues, Japanese and lydian scales), a **Hard mode** group (*Razor Thorn*, *Bramble Rush*, *Cyclone Canopy*, *Nightshade Nocturne*, *Wild Garlic Gallop*, *Hydra Hydrangea*, *Overgrowth* and Mozart's *Turkish March*; 144-186 BPM with sixteenth-note runs and double-time drums) plus classical pieces (*Mountain King*, *Bumblebee*, *Ode to Joy*) and folk and nursery tunes (*Twinkle Twinkle*, *Jingle Bells*, *When the Saints Go Marching In*, *Mary Had a Little Lamb*, *Row Row Row Your Boat*, *Hot Cross Buns*, *London Bridge*, *Oh! Susanna*)
 
 ## Build
 

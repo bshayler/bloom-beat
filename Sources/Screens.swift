@@ -97,7 +97,7 @@ struct MenuView: View {
                 ScrollViewReader { proxy in
                     ScrollView(showsIndicators: true) {
                         VStack(spacing: 8) {
-                            ForEach(["Originals", "Cool originals", "Classical", "Folk & nursery"], id: \.self) { g in
+                            ForEach(["Originals", "Cool originals", "Hard mode", "Classical", "Folk & nursery"], id: \.self) { g in
                                 sectionTitle(g == "Originals" ? "Songs · originals" : "Songs · " + g.lowercased())
                                     .padding(.top, 4)
                                 ForEach(Array(engine.songs.enumerated()).filter { $0.element.group == g }, id: \.offset) { idx, s in
