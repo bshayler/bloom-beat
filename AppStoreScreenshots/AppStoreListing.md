@@ -7,7 +7,7 @@ Bloom Beat: Plant Rhythm
 Grow a garden with rhythm
 
 ## Promotional text (170 max, editable any time)
-Slide, hold and tap leaves to the beat as your flower grows from seedling to full bloom. 23 songs, swinging vines and double vines.
+Slide, hold and tap leaves to the beat as your flower grows from seedling to full bloom. 31 songs, 8 of them Hard mode, plus swinging vines and double vines.
 
 ## Description (4000 max)
 Tap to the beat and grow a garden!
@@ -18,7 +18,7 @@ HOW TO PLAY
 • Leaves fall down a 3D garden track. Tap a lane as a leaf lands in its target.
 • Hold the vines. Long notes have a vine tail, so press and keep your finger down until it ends.
 • Follow the swing. Some vines curve from lane to lane in a smooth S, so drag your finger along the vine.
-• Double vines. On the hardest songs, two vines swing at once. Use two fingers!
+• Double vines. On the fast songs, two vines can swing at once. Use two fingers!
 • Chords. When two leaves arrive together, tap both lanes at once.
 • Build combos for a bigger score and a faster-growing plant.
 
@@ -27,11 +27,14 @@ Every song can be played on 2, 3, 4 or 5 lanes:
 • Seedling: 2 lanes, relaxed and easy to learn
 • Sprout: 3 lanes, a gentle step up (adds swinging vines)
 • Bloom: 4 lanes, a proper rhythm workout
-• Garden: 5 lanes, for expert fingers (double vines on the hardest songs)
+• Garden: 5 lanes, for expert fingers
 
-23 SONGS
-• Original songs, from the dreamy Moonlit Meadow to the lightning-fast Petal Storm
+Double vines need 4 or 5 lanes and appear on the faster songs (138 BPM and up), including every Hard mode song.
+
+31 SONGS
+• Originals: from the dreamy Moonlit Meadow to the lightning-fast Petal Storm
 • Cool originals: synthwave, funk, electro, country and floaty ambient tracks
+• Hard mode: 8 fast songs at 144 to 186 BPM, with sixteenth-note runs, from Razor Thorn and Cyclone Canopy to Overgrowth and Mozart's Turkish March
 • Classical favorites: In the Hall of the Mountain King, Flight of the Bumblebee and Ode to Joy
 • Folk and nursery tunes: Jingle Bells, Oh! Susanna, Row Row Row Your Boat and more
 
@@ -54,7 +57,7 @@ Plant a seed. Find the beat. Watch it bloom.
 rhythm,music,plant,flower,garden,tap,beat,classical,relax,cozy,casual,chill,calm
 
 ## What's New (version 1.0)
-Welcome to Bloom Beat! 23 songs, swinging and double vines, and a plant shelf to show off your garden.
+Welcome to Bloom Beat! 31 songs including 8 new Hard mode songs, richer music, swinging and double vines, and a plant shelf to show off your garden.
 
 ## Category
 Games → Music
