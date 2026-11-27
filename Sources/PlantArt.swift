@@ -362,8 +362,17 @@ struct PlantPreview: View {
     var cycle = false
     var compact = false   // draw at menu proportions, scaled to fit small cells
     var flower = 3
+    var use3D = true      // false keeps the 2D canvas (used by the shelf grid until it has cached snapshots)
 
     var body: some View {
+        if use3D && PlantRendering.enabled {
+            PlantSceneView(health: health, wilt: wilt, flower: flower, cycle: cycle)
+        } else {
+            canvasBody
+        }
+    }
+
+    private var canvasBody: some View {
         TimelineView(.animation) { tl in
             let t = tl.date.timeIntervalSinceReferenceDate
             Canvas { ctx, size in
