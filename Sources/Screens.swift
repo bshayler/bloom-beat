@@ -315,7 +315,7 @@ struct ShelfView: View {
         Group {
             if let r {
                 Button { selected = r } label: {
-                    PlantPreview(health: r.health, wilt: r.wilt, compact: true, flower: r.flowerType, use3D: false)
+                    PlantPreview(health: r.health, wilt: r.wilt, compact: true, flower: r.flowerType, still: true)
                 }
                 .buttonStyle(.plain)
                 .contextMenu {
