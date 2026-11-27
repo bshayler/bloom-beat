@@ -97,10 +97,13 @@ struct MenuView: View {
                 ScrollViewReader { proxy in
                     ScrollView(showsIndicators: true) {
                         VStack(spacing: 8) {
-                            ForEach(["Originals", "Cool originals", "Hard mode", "Classical", "Folk & nursery"], id: \.self) { g in
-                                sectionTitle(g == "Originals" ? "Songs · originals" : "Songs · " + g.lowercased())
+                            // easy to very hard, by tempo; each tier is sorted slowest first
+                            ForEach(Self.tiers, id: \.name) { tier in
+                                sectionTitle("Songs · \(tier.name) · \(tier.label)")
                                     .padding(.top, 4)
-                                ForEach(Array(engine.songs.enumerated()).filter { $0.element.group == g }, id: \.offset) { idx, s in
+                                ForEach(Array(engine.songs.enumerated())
+                                    .filter { tier.range.contains($0.element.bpm) }
+                                    .sorted { ($0.element.bpm, $0.offset) < ($1.element.bpm, $1.offset) }, id: \.offset) { idx, s in
                                     songRow(idx, s).id(idx)
                                 }
                             }
@@ -148,6 +151,14 @@ struct MenuView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    /// Difficulty tiers by tempo (BPM).
+    static let tiers: [(name: String, label: String, range: Range<Double>)] = [
+        ("easy", "under 105 BPM", 0..<105),
+        ("medium", "105-129 BPM", 105..<130),
+        ("hard", "130-149 BPM", 130..<150),
+        ("very hard", "150+ BPM", 150..<1000)
+    ]
+
     func songRow(_ idx: Int, _ s: SongSpec) -> some View {
         let sel = engine.selectedSong == idx
         let best = engine.best(s, engine.difficulty.lanes)
@@ -155,8 +166,17 @@ struct MenuView: View {
             HStack(spacing: 12) {
                 Text(s.emoji).font(.system(size: 30))
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(s.title).font(.system(size: 16, weight: .bold, design: .rounded)).foregroundStyle(ink)
-                        .lineLimit(1).minimumScaleFactor(0.8)
+                    HStack(spacing: 6) {
+                        Text(s.title).font(.system(size: 16, weight: .bold, design: .rounded)).foregroundStyle(ink)
+                            .lineLimit(1).minimumScaleFactor(0.8)
+                        if s.hard {
+                            Text("HARD MODE").font(.system(size: 8, weight: .heavy, design: .rounded))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 6).padding(.vertical, 2)
+                                .background(Capsule().fill(RGB(0.80, 0.30, 0.22).color))
+                                .fixedSize()
+                        }
+                    }
                     Text("\(s.blurb) · \(Int(s.bpm)) BPM").font(.system(size: 11, weight: .medium, design: .rounded))
                         .foregroundStyle(ink.opacity(0.65)).lineLimit(1).minimumScaleFactor(0.8)
                 }

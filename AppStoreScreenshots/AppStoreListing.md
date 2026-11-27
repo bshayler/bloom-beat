@@ -31,7 +31,7 @@ Every song can be played on 2, 3, 4 or 5 lanes:
 
 Double vines need 4 or 5 lanes and appear on the faster songs (138 BPM and up), including every Hard mode song.
 
-31 SONGS
+31 SONGS, SORTED FROM EASY TO VERY HARD
 • Originals: from the dreamy Moonlit Meadow to the lightning-fast Petal Storm
 • Cool originals: synthwave, funk, electro, country and floaty ambient tracks
 • Hard mode: 8 fast songs at 144 to 186 BPM, with sixteenth-note runs, from Razor Thorn and Cyclone Canopy to Overgrowth and Mozart's Turkish March
