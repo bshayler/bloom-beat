@@ -366,7 +366,7 @@ struct PlantPreview: View {
     var still = false     // true shows a cached picture of the 3D plant instead of a live view (shelf grid)
 
     var body: some View {
-        if use3D && PlantRendering.enabled {
+        if use3D && PlantRendering.effective {
             if still {
                 PlantSnapshotView(health: health, wilt: wilt, flower: flower)
             } else {

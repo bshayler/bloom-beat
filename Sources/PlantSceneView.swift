@@ -7,6 +7,22 @@ import UIKit
 /// Flip `enabled` to false to fall back to the 2D Canvas plants everywhere (for A/B checks and as a safety net).
 enum PlantRendering {
     static var enabled = true
+
+    /// What the views actually check. 3D is skipped in Low Power Mode, or when the app is launched with
+    /// `-no3dplants` (handy for comparing frame rates in Instruments).
+    static var effective: Bool {
+        enabled
+            && !ProcessInfo.processInfo.isLowPowerModeEnabled
+            && !CommandLine.arguments.contains("-no3dplants")
+    }
+}
+
+/// One frame of plant state, supplied by the game each frame.
+struct PlantFrame {
+    var health: Double
+    var wilt: Double
+    var flower: Int
+    var pop: Double
 }
 
 /// One SceneKit scene with a pot, a plant model, lights and a camera. Reused by the live view and the Xcode preview.
@@ -34,6 +50,7 @@ final class PlantScene {
         sunLight.intensity = 1700
         sunLight.castsShadow = true
         sunLight.shadowRadius = 6
+        sunLight.shadowMapSize = CGSize(width: 1024, height: 1024)
         sunLight.shadowSampleCount = 8
         sunLight.shadowColor = UIColor(white: 0, alpha: 0.35)
         sun.light = sunLight
@@ -94,6 +111,9 @@ struct PlantSceneView: UIViewRepresentable {
     var wilt: Double
     var flower: Int
     var cycle = false          // menu demo: grows through every flower on its own, like the 2D version
+    var live: (() -> PlantFrame)? = nil      // in-game: read fresh values from the engine every frame
+    var framesPerSecond = 60               // the plant changes slowly, so the game uses 30 to save battery
+    var antialiasing: SCNAntialiasingMode = .multisampling4X
 
     func makeCoordinator() -> Coordinator { Coordinator() }
 
@@ -105,27 +125,29 @@ struct PlantSceneView: UIViewRepresentable {
         view.delegate = coordinator
         view.backgroundColor = .clear
         view.isOpaque = false
-        view.antialiasingMode = .multisampling4X
-        view.preferredFramesPerSecond = 60
+        view.antialiasingMode = antialiasing
+        view.preferredFramesPerSecond = framesPerSecond
         view.isPlaying = true            // keeps rendering so the delegate runs every frame
         view.allowsCameraControl = false
         view.isUserInteractionEnabled = false
         view.onLayout = { [weak coordinator] size in coordinator?.plant.frame(for: size) }
-        coordinator.set(health: health, wilt: wilt, flower: flower, cycle: cycle)
+        coordinator.set(health: health, wilt: wilt, flower: flower, cycle: cycle, live: live)
         return view
     }
 
     func updateUIView(_ view: PlantSCNView, context: Context) {
-        context.coordinator.set(health: health, wilt: wilt, flower: flower, cycle: cycle)
+        context.coordinator.set(health: health, wilt: wilt, flower: flower, cycle: cycle, live: live)
     }
 
     final class Coordinator: NSObject, SCNSceneRendererDelegate {
         let plant = PlantScene()
         private let lock = NSLock()
         private var health = 0.5, wilt = 0.0, flower = 3, cycle = false
+        private var live: (() -> PlantFrame)?
 
-        func set(health: Double, wilt: Double, flower: Int, cycle: Bool) {
+        func set(health: Double, wilt: Double, flower: Int, cycle: Bool, live: (() -> PlantFrame)?) {
             lock.lock()
+            self.live = live
             self.health = health
             self.wilt = wilt
             self.flower = flower
@@ -140,6 +162,7 @@ struct PlantSceneView: UIViewRepresentable {
             let w = wilt
             var fl = flower
             let cycling = cycle
+            let provider = live
             lock.unlock()
 
             let t = Date().timeIntervalSinceReferenceDate
@@ -153,6 +176,12 @@ struct PlantSceneView: UIViewRepresentable {
                 let stage = PlantStage.index(for: h)
                 let stageStart = PlantStage.thresholds[stage]
                 pop = exp(-(h - stageStart) * 40) * (stage > 0 ? 1 : 0)
+            }
+            if let provider {
+                // in-game: the engine's own values, read once per frame (plain numbers, so a stale read is harmless)
+                let f = provider()
+                plant.model.update(health: f.health, wilt: f.wilt, time: t, pop: f.pop, flower: f.flower)
+                return
             }
             plant.model.update(health: h, wilt: w, time: t, pop: pop, flower: fl)
         }

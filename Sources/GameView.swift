@@ -40,16 +40,54 @@ struct TouchPad: UIViewRepresentable {
 struct GameView: View {
     @ObservedObject var engine: GameEngine
 
+    /// Decided once per game screen so the layers do not change while playing.
+    @State private var use3DPlant = PlantRendering.effective
+
+    /// The live 3D plant, placed exactly where the 2D plant used to be drawn.
+    private func plantOverlay(size: CGSize, top: CGFloat) -> some View {
+        var layout = Layout()
+        layout.size = size
+        layout.topInset = top
+        let rect = layout.plantRect.insetBy(dx: 0, dy: 4)
+        return PlantSceneView(health: 0, wilt: 0, flower: engine.flower,
+                              live: { [weak engine] in
+                                  guard let e = engine else { return PlantFrame(health: 0.15, wilt: 0, flower: 3, pop: 0) }
+                                  return PlantFrame(health: e.displayHealth, wilt: e.displayWilt, flower: e.flower,
+                                                    pop: exp(-(CACurrentMediaTime() - e.stageChangeTime) * 3.5))
+                              },
+                              framesPerSecond: 30, antialiasing: .multisampling2X)
+            .frame(width: rect.width, height: rect.height)
+            .position(x: rect.midX, y: rect.midY)
+            .allowsHitTesting(false)
+    }
+
     var body: some View {
         GeometryReader { outer in
             let ins = outer.safeAreaInsets
             let full = CGSize(width: outer.size.width + ins.leading + ins.trailing,
                               height: outer.size.height + ins.top + ins.bottom)
             ZStack(alignment: .topTrailing) {
-                TimelineView(.animation) { tl in
-                    let t = tl.date.timeIntervalSinceReferenceDate
-                    Canvas { ctx, size in
-                        GameRenderer.draw(&ctx, size: size, engine: engine, time: t)
+                if use3DPlant {
+                    // back: sky and hills, then the live 3D plant, then everything else on top
+                    TimelineView(.animation) { tl in
+                        let t = tl.date.timeIntervalSinceReferenceDate
+                        Canvas { ctx, size in
+                            GameRenderer.draw(&ctx, size: size, engine: engine, time: t, layer: .back)
+                        }
+                    }
+                    plantOverlay(size: full, top: ins.top)
+                    TimelineView(.animation) { tl in
+                        let t = tl.date.timeIntervalSinceReferenceDate
+                        Canvas { ctx, size in
+                            GameRenderer.draw(&ctx, size: size, engine: engine, time: t, layer: .front)
+                        }
+                    }
+                } else {
+                    TimelineView(.animation) { tl in
+                        let t = tl.date.timeIntervalSinceReferenceDate
+                        Canvas { ctx, size in
+                            GameRenderer.draw(&ctx, size: size, engine: engine, time: t)
+                        }
                     }
                 }
                 TouchPad(began: { id, pt, ts in engine.touchBegan(id: id, at: pt, timestamp: ts) },
@@ -179,18 +217,27 @@ struct SceneryBackground: View {
 // MARK: - Renderer
 
 enum GameRenderer {
-    static func draw(_ ctx: inout GraphicsContext, size: CGSize, engine e: GameEngine, time: Double) {
+    /// `.all` draws everything (the 2D plant included). With the 3D plant the game draws `.back` (sky and hills),
+    /// puts the SceneKit view over it, then draws `.front` (everything else) on top.
+    enum Layer { case all, back, front }
+
+    static func draw(_ ctx: inout GraphicsContext, size: CGSize, engine e: GameEngine, time: Double, layer: Layer = .all) {
         if e.layout.size != size { e.layout.size = size }
         let L = e.layout
         let w = e.displayWilt
         let t = e.songTime + e.displayLead
         let wallNow = CACurrentMediaTime()
 
-        drawScenery(&ctx, size: size, groundY: L.highwayTop, wilt: w, time: time)
+        if layer != .front {
+            drawScenery(&ctx, size: size, groundY: L.highwayTop, wilt: w, time: time)
+        }
+        if layer == .back { return }
 
-        // plant
-        let pop = exp(-(wallNow - e.stageChangeTime) * 3.5)
-        drawPlant(ctx, rect: L.plantRect.insetBy(dx: 0, dy: 4), health: e.displayHealth, wilt: w, time: time, pop: pop, flower: e.flower)
+        // plant (the .front layer leaves this to the SceneKit view underneath)
+        if layer == .all {
+            let pop = exp(-(wallNow - e.stageChangeTime) * 3.5)
+            drawPlant(ctx, rect: L.plantRect.insetBy(dx: 0, dy: 4), health: e.displayHealth, wilt: w, time: time, pop: pop, flower: e.flower)
+        }
 
         // stage label (glass chip)
         let stageName = PlantStage.name(e.stage, flower: e.flower) + (w > 0.55 ? " · wilting" : "")
