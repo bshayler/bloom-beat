@@ -31,7 +31,7 @@ Every song can be played on 2, 3, 4 or 5 lanes:
 
 Double vines need 4 or 5 lanes and appear on the faster songs (138 BPM and up), including every Hard mode song.
 
-31 SONGS
+31 SONGS, SORTED FROM EASY TO VERY HARD
 • Originals: from the dreamy Moonlit Meadow to the lightning-fast Petal Storm
 • Cool originals: synthwave, funk, electro, country and floaty ambient tracks
 • Hard mode: 8 fast songs at 144 to 186 BPM, with sixteenth-note runs, from Razor Thorn and Cyclone Canopy to Overgrowth and Mozart's Turkish March
@@ -56,8 +56,8 @@ Plant a seed. Find the beat. Watch it bloom.
 ## Keywords (100 max)
 rhythm,music,plant,flower,garden,tap,beat,classical,relax,cozy,casual,chill,calm
 
-## What's New (version 1.0)
-Welcome to Bloom Beat! 31 songs including 8 new Hard mode songs, richer music, swinging and double vines, and a plant shelf to show off your garden.
+## What's New (version 1.1)
+Your plants now grow in 3D! Daisies, tulips, cherry blossoms and sunflowers have new models, and vines can sweep across several lanes at once.
 
 ## Category
 Games → Music

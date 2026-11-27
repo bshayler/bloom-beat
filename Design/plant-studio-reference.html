@@ -1,0 +1,371 @@
+<title>Bloom Beat Plant Studio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700&display=swap">
+<style>
+/* Layout: one large lit stage with the plant, a control strip beside it (below on phones), then notes. */
+:root{
+  --bg:#f3f6ec; --panel:#ffffff; --fg:#27331f; --muted:#5f6d55; --line:#d9e2cc;
+  --accent:#c9623a; --accent-fg:#ffffff; --leaf:#4b8f3c; --chip:#e9f0dc;
+  --stage-top:#dff1f7; --stage-bot:#cfe6b8;
+  --font-display:'Fredoka','Trebuchet MS',system-ui,sans-serif;
+  --font-body:'Nunito',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141b12; --panel:#1e281b; --fg:#e7f0dc; --muted:#a2b194; --line:#33422d;
+  --accent:#e07a50; --accent-fg:#1a0f08; --leaf:#8fd37c; --chip:#2a3826;
+  --stage-top:#26394a; --stage-bot:#243a23; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141b12; --panel:#1e281b; --fg:#e7f0dc; --muted:#a2b194; --line:#33422d;
+  --accent:#e07a50; --accent-fg:#1a0f08; --leaf:#8fd37c; --chip:#2a3826;
+  --stage-top:#26394a; --stage-bot:#243a23; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:16px/1.55 var(--font-body);
+  padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1100px;margin:0 auto}
+h1{font:600 clamp(1.7rem,4vw,2.4rem)/1.1 var(--font-display);margin:0 0 6px;text-wrap:balance}
+h2{font:600 1.15rem/1.2 var(--font-display);margin:0 0 10px}
+.lead{color:var(--muted);margin:0 0 20px;max-width:62ch}
+.grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:820px){.grid{grid-template-columns:minmax(0,1fr)}}
+.stage{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--line);
+  background:linear-gradient(180deg,var(--stage-top),var(--stage-bot));width:100%;min-width:0;height:clamp(340px,64vw,580px);touch-action:none;cursor:grab}
+.stage:active{cursor:grabbing}
+.stage canvas{display:block;width:100%;height:100%}
+.badge{position:absolute;left:12px;bottom:12px;background:rgba(255,255,255,.82);color:#27331f;border-radius:999px;
+  padding:6px 14px;font:600 1rem var(--font-display);backdrop-filter:blur(6px)}
+.hint{position:absolute;right:12px;top:10px;font-size:.78rem;color:#33442b;background:rgba(255,255,255,.6);border-radius:999px;padding:3px 10px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:18px}
+.row label,.row .lab{display:block;font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.seg button{flex:1 1 auto;min-width:0;border:1px solid var(--line);background:var(--chip);color:var(--fg);border-radius:10px;
+  padding:9px 10px;font:600 .92rem var(--font-body);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--leaf);outline-offset:2px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.ticks{display:flex;justify-content:space-between;font-size:.7rem;color:var(--muted);margin-top:2px}
+.notes{margin-top:28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+.note p,.note li{color:var(--muted);margin:0 0 6px;font-size:.95rem}
+.note ul{margin:0;padding-left:18px}
+#nogl{display:none;padding:24px;color:#33442b}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+
+<div class="wrap">
+  <h1>Bloom Beat Plant Studio</h1>
+  <p class="lead">Concept models for the potted flower, rebuilt as real 3D. Drag to turn the pot, scroll or pinch to zoom, and slide through the six growth stages the game already uses.</p>
+  <div class="grid">
+    <div class="stage" id="stage">
+      <canvas id="gl" aria-label="3D potted plant, drag to rotate"></canvas>
+      <div id="nogl">This preview needs WebGL, which this browser has turned off.</div>
+      <div class="badge" id="badge">Big Daisy</div>
+      <div class="hint">drag to rotate</div>
+    </div>
+    <div class="panel">
+      <div class="row"><span class="lab">Flower</span>
+        <div class="seg" id="flowers"></div></div>
+      <div class="row"><span class="lab">View</span>
+        <div class="seg" id="views">
+          <button type="button" data-v="single" aria-pressed="true">One pot</button>
+          <button type="button" data-v="shelf" aria-pressed="false">Plant shelf</button>
+        </div></div>
+      <div class="row"><label for="grow">Growth</label>
+        <input id="grow" type="range" min="0" max="1000" value="930">
+        <div class="ticks"><span>Seedling</span><span>Sprout</span><span>Bud</span><span>Small</span><span>Flower</span><span>Big</span></div></div>
+      <div class="row"><span class="lab">Jump to stage</span><div class="seg three" id="stages"></div></div>
+      <div class="row"><label for="wilt">Wilt (missed notes)</label>
+        <input id="wilt" type="range" min="0" max="100" value="0">
+        <div class="ticks"><span>Happy</span><span>Drooping</span></div></div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <div class="note"><h2>What is different</h2><ul>
+      <li>Real petals with curl, fold and a notched tip, not flat ovals</li>
+      <li>Sunflower seed head built from 480 seeds in a spiral</li>
+      <li>Soft light, cast shadows and a terracotta pot with a rim</li>
+      <li>Wilt bends the stem and browns the leaves and petals</li></ul></div>
+    <div class="note"><h2>Same stages as the game</h2>
+      <p>Seedling, Sprout, Bud, Small, full flower and Big, using the game's own growth thresholds (0, 18, 34, 50, 66 and 84 percent).</p></div>
+    <div class="note"><h2>About this preview</h2>
+      <p>These are web concept renders, not in the app yet. The app draws its plants in 2D, so using these models there means a 3D layer such as SceneKit. The shapes here would carry over.</p></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+const T = window.THREE;
+const stageEl = document.getElementById('stage');
+const canvas = document.getElementById('gl');
+if(!T){ document.getElementById('nogl').style.display='block'; document.getElementById('nogl').textContent='The 3D library could not load.'; return; }
+let renderer;
+try{ renderer = new T.WebGLRenderer({canvas, antialias:true, alpha:true, preserveDrawingBuffer:false}); }
+catch(e){ document.getElementById('nogl').style.display='block'; return; }
+const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+renderer.setPixelRatio(Math.min(2, window.devicePixelRatio||1));
+renderer.outputEncoding = T.sRGBEncoding;
+renderer.toneMapping = T.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.95;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = T.PCFSoftShadowMap;
+
+const scene = new T.Scene();
+const camera = new T.PerspectiveCamera(34, 1, 0.1, 100);
+scene.add(new T.HemisphereLight(0xdff3ff, 0x8a7a55, 0.85));
+const sun = new T.DirectionalLight(0xfff1d6, 1.9);
+sun.position.set(4.5, 9, 5.5); sun.castShadow = true;
+sun.shadow.mapSize.set(2048,2048);
+Object.assign(sun.shadow.camera,{left:-9,right:9,top:9,bottom:-3,near:1,far:30});
+sun.shadow.bias = -0.0006; sun.shadow.radius = 4;
+scene.add(sun);
+const rim = new T.DirectionalLight(0xbfe6ff, 0.7); rim.position.set(-6,4,-6); scene.add(rim);
+
+const ground = new T.Mesh(new T.PlaneGeometry(60,60), new T.ShadowMaterial({opacity:.28}));
+ground.rotation.x = -Math.PI/2; ground.receiveShadow = true; scene.add(ground);
+
+// ---------- helpers ----------
+const THRESH=[0,.18,.34,.50,.66,.84,1.0];
+const FLOWERS={3:'Daisy',4:'Tulip',5:'Cherry Blossom',6:'Sunflower'};
+const STAGE_NAMES=['Seedling','Sprout','Bud','Small','','Big'];
+function stageIndex(h){let k=0;for(let i=0;i<6;i++) if(h>=THRESH[i]) k=i;return k;}
+function stageName(i,f){const n=FLOWERS[f];return i===0?'Seedling':i===1?'Sprout':i===2?'Bud':i===3?'Small '+n:i===4?n:'Big '+n;}
+function tbl(t,h){ // piecewise-linear through the 7 threshold points
+  let i=0; while(i<5 && h>=THRESH[i+1]) i++;
+  const f=(h-THRESH[i])/(THRESH[i+1]-THRESH[i]); return t[i]+(t[i+1]-t[i])*Math.min(1,Math.max(0,f));
+}
+const H_TBL   =[0.30,0.85,1.50,1.75,2.15,2.55,2.75];
+const HEAD_TBL=[0,0,0.5,0.55,0.8,1.0,1.1];
+const LEAF_TBL=[0.35,0.6,0.8,0.9,1.0,1.05,1.12];
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+const BROWN=new T.Color('#8a6a3a').convertSRGBToLinear();
+function mk(hex,wilt){const c=new T.Color(hex).convertSRGBToLinear(); if(wilt>0){const g=(c.r+c.g+c.b)/3; c.lerp(new T.Color(g,g*0.9,g*0.7),wilt*0.5); c.lerp(BROWN,wilt*0.65);} return c;}
+const smooth=(a,b,x)=>{x=Math.min(1,Math.max(0,(x-a)/(b-a)));return x*x*(3-2*x);};
+
+function blade({len,width,curl=0.3,fold=0.2,wave=0,notch=0,prof,c0,c1,seg=12,pointy=false}){
+  const g=new T.PlaneGeometry(1,1,8,seg), p=g.attributes.position, cols=[];
+  for(let i=0;i<p.count;i++){
+    const x=p.getX(i)*2, t=p.getY(i)+0.5, half=prof(t)*width/2;
+    let X=x*half, Y=t*len, Z=-curl*len*t*t - Math.abs(X)*fold + Math.sin(t*11)*wave*half*Math.abs(x);
+    if(notch>0 && t>0.78){ const n=Math.max(0,1-Math.abs(x)/0.5); Y-=notch*len*n*n*smooth(0.78,1,t); }
+    p.setXYZ(i,X,Y,Z);
+    const k=Math.pow(t,0.85), rib=Math.max(0,1-Math.abs(x)/0.08)*0.12;
+    const c=c0.clone().lerp(c1,k); c.offsetHSL(0,0,rib); cols.push(c.r,c.g,c.b);
+  }
+  g.setAttribute('color',new T.Float32BufferAttribute(cols,3)); g.computeVertexNormals(); return g;
+}
+const matV=new T.MeshStandardMaterial({vertexColors:true,side:T.DoubleSide,roughness:.62,metalness:0});
+function mesh(g,m){const o=new T.Mesh(g,m||matV);o.castShadow=true;o.receiveShadow=true;return o;}
+function std(color,rough=.7){const c=(color&&color.isColor)?color:new T.Color(color).convertSRGBToLinear();return new T.MeshStandardMaterial({color:c,roughness:rough});}
+
+const profOval=t=>Math.pow(Math.sin(Math.PI*Math.pow(t,0.75)),0.9);
+const profStrap=t=>Math.pow(Math.sin(Math.PI*Math.pow(t,0.62)),0.55);
+const profHeart=t=>Math.pow(Math.sin(Math.PI*Math.pow(t,0.55)),0.85);
+const profPetal=t=>Math.pow(Math.sin(Math.min(1,t*1.02)*Math.PI*0.5+0.0001),0.8)*(1-0.15*t);
+const profRay=t=>Math.pow(Math.sin(Math.PI*Math.pow(t,0.8)),0.85);
+const profWide=t=>Math.pow(Math.sin(Math.min(1,t)*Math.PI*0.5),0.55);
+
+function leafAt(parent,pos,az,tilt,geo){
+  const o=mesh(geo); o.rotation.order='YXZ'; o.rotation.set(tilt,az,0); o.position.copy(pos); parent.add(o); return o;
+}
+function petalRing(head,{n,off=0,r0=0.1,tilt,geo,lift=0}){
+  for(let i=0;i<n;i++){
+    const az=off+i/n*Math.PI*2, o=mesh(geo);
+    o.rotation.order='YXZ'; o.rotation.set(tilt,az,0);
+    o.position.set(Math.sin(az)*r0, lift, Math.cos(az)*r0); head.add(o);
+  }
+}
+function phyllo(head,{n,R,dome,size,colorFn,y=0}){
+  const g=new T.IcosahedronGeometry(1,0), m=new T.MeshStandardMaterial({roughness:.8});
+  const im=new T.InstancedMesh(g,m,n), d=new T.Object3D(), ga=Math.PI*(3-Math.sqrt(5));
+  for(let i=0;i<n;i++){
+    const f=Math.sqrt((i+.5)/n), r=f*R, a=i*ga;
+    d.position.set(Math.cos(a)*r, y+dome*(1-f*f), Math.sin(a)*r);
+    const s=size*(0.7+0.5*f); d.scale.set(s,s*0.8,s); d.rotation.set(0,a,0); d.updateMatrix();
+    im.setMatrixAt(i,d.matrix); im.setColorAt(i,colorFn(f,i));
+  }
+  im.castShadow=true; im.receiveShadow=true; head.add(im);
+}
+function stamens(head,{n,len,spread,tip,col,thick=.012,y=0}){
+  const gm=std(col,.6), tm=std(tip,.5);
+  for(let i=0;i<n;i++){
+    const az=i/n*Math.PI*2+i*.37, lean=spread*(0.6+0.4*((i*7)%5)/4);
+    const g=new T.Group(); g.rotation.order='YXZ'; g.rotation.set(lean,az,0); g.position.y=y;
+    const c=new T.Mesh(new T.CylinderGeometry(thick*.7,thick,len,5),gm); c.position.y=len/2; c.castShadow=true;
+    const s=new T.Mesh(new T.SphereGeometry(thick*2.2,8,6),tm); s.position.y=len; s.castShadow=true;
+    g.add(c,s); head.add(g);
+  }
+}
+
+// ---------- heads (local +Y = stem direction) ----------
+function headDaisy(w){
+  const g=new T.Group(), wt=w*0.6;
+  const pet=(len,wid,c0,c1)=>blade({len,width:wid,curl:0.18,fold:0.12,prof:profRay,c0:mk(c0,w),c1:mk(c1,w),seg:8});
+  petalRing(g,{n:17,off:0.1,r0:0.16,tilt:1.38+wt,geo:pet(0.78,0.2,'#fff1a8','#ffffff'),lift:-0.02});
+  petalRing(g,{n:17,off:0.1+Math.PI/17,r0:0.14,tilt:1.22+wt,geo:pet(0.66,0.19,'#ffe98a','#fffdf2'),lift:0.012});
+  const disc=mesh(new T.SphereGeometry(0.25,24,14),std(mk('#e8a90c',w),.8)); disc.scale.y=0.5; disc.position.y=0.01; g.add(disc);
+  phyllo(g,{n:110,R:0.22,dome:0.09,size:0.026,y:0.02,colorFn:(f,i)=>mk(f<0.35?'#b9650f':(i%3?'#f7c21b':'#e39a10'),w)});
+  const sep=blade({len:0.3,width:0.12,curl:.3,prof:profOval,c0:mk('#2f7d32',w),c1:mk('#6fb04a',w),seg:4});
+  petalRing(g,{n:8,r0:0.06,tilt:2.3,geo:sep,lift:-0.05});
+  return g;
+}
+function headTulip(w){
+  const g=new T.Group(), open=w*0.45;
+  const outer=blade({len:1.25,width:0.7,curl:0.34,fold:0.1,prof:profPetal,c0:mk('#9d1630',w),c1:mk('#ff5a6a',w),seg:12});
+  const inner=blade({len:1.12,width:0.62,curl:0.3,fold:0.12,prof:profPetal,c0:mk('#b3203a',w),c1:mk('#ff7482',w),seg:12});
+  petalRing(g,{n:3,off:0,r0:0.14,tilt:0.2+open,geo:outer});
+  petalRing(g,{n:3,off:Math.PI/3,r0:0.1,tilt:0.1+open*0.8,geo:inner,lift:0.03});
+  stamens(g,{n:6,len:0.5,spread:0.12,tip:'#d6b62a',col:'#7a8f2c',y:0.02});
+  return g;
+}
+function headCherry(w){
+  const g=new T.Group(), wt=w*0.55;
+  const a=blade({len:0.85,width:0.78,curl:0.32,fold:0.16,notch:0.14,prof:profWide,c0:mk('#ee5a8c',w),c1:mk('#ffe6ef',w),seg:10});
+  const b=blade({len:0.74,width:0.7,curl:0.3,fold:0.15,notch:0.13,prof:profWide,c0:mk('#f27aa3',w),c1:mk('#fff2f6',w),seg:10});
+  petalRing(g,{n:5,off:0,r0:0.07,tilt:0.98+wt,geo:a});
+  petalRing(g,{n:5,off:Math.PI/5,r0:0.05,tilt:0.8+wt,geo:b,lift:0.04});
+  stamens(g,{n:16,len:0.36,spread:0.7,tip:'#c0264f',col:'#f4a8c0',y:0.06,thick:.008});
+  const c=mesh(new T.SphereGeometry(0.06,10,8),std(mk('#9fbf3d',w),.6)); c.position.y=0.08; g.add(c);
+  return g;
+}
+function headSun(w){
+  const g=new T.Group(), wt=w*0.6;
+  const ray=(len,wid,c0,c1)=>blade({len,width:wid,curl:0.12,fold:0.1,prof:profRay,c0:mk(c0,w),c1:mk(c1,w),seg:8});
+  petalRing(g,{n:26,off:0,r0:0.58,tilt:1.45+wt,geo:ray(0.8,0.2,'#f59a0b','#ffd23d'),lift:-0.03});
+  petalRing(g,{n:26,off:Math.PI/26,r0:0.55,tilt:1.3+wt,geo:ray(0.7,0.21,'#ee8e08','#ffc42b'),lift:0.02});
+  const base=mesh(new T.CylinderGeometry(0.66,0.6,0.1,40),std(mk('#3a2412',w),.9)); base.position.y=0; g.add(base);
+  phyllo(g,{n:520,R:0.64,dome:0.14,size:0.034,y:0.05,colorFn:(f,i)=>mk(f<0.25?'#2a170a':f<0.8?(i%2?'#4b2a12':'#3a2010'):(i%2?'#8a5a1e':'#b5841f'),w)});
+  const br=blade({len:0.36,width:0.22,curl:.25,prof:profRay,c0:mk('#2f7d32',w),c1:mk('#6aa83f',w),seg:4});
+  petalRing(g,{n:14,r0:0.4,tilt:2.5,geo:br,lift:-0.06});
+  return g;
+}
+function headBud(f,w){
+  const g=new T.Group(), col={3:'#fff0f3',4:'#d4263e',5:'#f7a1be',6:'#a8c43a'}[f];
+  const b=mesh(new T.SphereGeometry(0.5,24,18),std(mk(col,w),.55)); b.scale.set(0.8,1.25,0.8); b.position.y=0.5; g.add(b);
+  const sep=blade({len:0.6,width:0.34,curl:-.05,prof:profOval,c0:mk('#2f7d32',w),c1:mk('#78b84a',w),seg:6});
+  for(let i=0;i<5;i++){const az=i/5*Math.PI*2, o=mesh(sep); o.rotation.order='YXZ'; o.rotation.set(0.28,az,0); o.position.set(Math.sin(az)*.18,0,Math.cos(az)*.18); g.add(o);}
+  return g;
+}
+
+// ---------- full plant ----------
+function buildPlant(flower,h,wilt){
+  const grp=new T.Group(), rnd=mulberry(flower*97+5), st=stageIndex(h), w=wilt;
+  // pot
+  const pot=new T.Group();
+  const prof=[[0.0,0],[0.62,0],[0.66,0.04],[0.95,1.02],[1.08,1.04],[1.1,1.16],[1.04,1.22],[0.93,1.18],[0.9,1.1]].map(p=>new T.Vector2(p[0],p[1]));
+  const body=mesh(new T.LatheGeometry(prof,56),std('#c9623a',.82)); pot.add(body);
+  const band=mesh(new T.CylinderGeometry(1.1,1.03,0.1,56,1,true),std('#d77a4f',.8)); band.position.y=1.0; pot.add(band);
+  const soil=new T.Mesh(new T.CircleGeometry(0.92,40),std('#3f2a1b',1)); soil.rotation.x=-Math.PI/2; soil.position.y=1.1; soil.receiveShadow=true; pot.add(soil);
+  for(let i=0;i<9;i++){const p=new T.Mesh(new T.IcosahedronGeometry(0.05+rnd()*0.04,0),std('#6b5136',.9)); const a=rnd()*6.28,r=0.2+rnd()*0.6; p.position.set(Math.cos(a)*r,1.12,Math.sin(a)*r); pot.add(p);}
+  grp.add(pot);
+  const base=new T.Group(); base.position.y=1.1; grp.add(base);
+
+  // stem curve
+  const H=tbl(H_TBL,h), lean={3:0.12,4:0.05,5:0.2,6:0.06}[flower];
+  const pts=[]; for(let i=0;i<=8;i++){const t=i/8; pts.push(new T.Vector3(lean*H*t*t + w*0.85*H*Math.pow(t,2.4), H*t - w*0.28*H*Math.pow(t,3), Math.sin(t*3)*0.04*H));}
+  const curve=new T.CatmullRomCurve3(pts);
+  const sw={3:0.05,4:0.06,5:0.045,6:0.1}[flower]*(0.55+0.45*Math.min(1,H/2.4));
+  const stemGeo=new T.TubeGeometry(curve,40,sw,10,false);
+  const stem=mesh(stemGeo,std(mk(flower===6?'#5d9a3a':'#468a38',w),.6)); base.add(stem);
+
+  const lscale=tbl(LEAF_TBL,h), lc0=mk('#2b7330',w), lc1=mk('#7dc243',w);
+  // cotyledons
+  const coty=blade({len:0.36*lscale+0.1,width:0.26*lscale+0.07,curl:0.15,prof:profOval,c0:mk('#3c8a35',w),c1:mk('#9bd35a',w),seg:6});
+  if(st<3){ for(let i=0;i<2;i++) leafAt(base,curve.getPoint(st===0?1:0.55),i*Math.PI+0.4,1.1+w*0.5,coty); }
+  // true leaves
+  if(st>=1){
+    const count=st===1?3:{3:8,4:4,5:7,6:6}[flower];
+    for(let i=0;i<count;i++){
+      const t=st===1?0.35+i*0.22:(flower===4?0.02+i*0.015:0.05+0.8*i/count);
+      const pos=curve.getPoint(Math.min(0.98,t)), az=i*2.399+rnd()*0.4, sz=lscale*(st===1?0.9:1)*(0.85+rnd()*0.3)*(1-0.35*t);
+      let geo,tilt=0.75+t*0.2+w*0.7;
+      if(flower===4){ geo=blade({len:1.6*sz,width:0.42*sz,curl:0.5,fold:0.22,prof:profStrap,c0:lc0,c1:lc1,seg:14}); tilt=0.38+i*0.17+w*0.7; }
+      else if(flower===6){ geo=blade({len:1.0*sz,width:0.95*sz,curl:0.35,fold:0.12,wave:0.05,prof:profHeart,c0:lc0,c1:lc1,seg:12}); tilt=0.9+w*0.6; }
+      else if(flower===5){ geo=blade({len:0.85*sz,width:0.42*sz,curl:0.3,fold:0.15,prof:profOval,c0:lc0,c1:lc1,seg:10}); tilt=0.95+w*0.6; }
+      else { geo=blade({len:1.0*sz,width:0.5*sz,curl:0.28,fold:0.18,wave:0.04,prof:profOval,c0:lc0,c1:lc1,seg:12}); tilt=0.85+w*0.6; }
+      if(st===1){ geo=blade({len:0.55*sz,width:0.34*sz,curl:0.3,prof:profOval,c0:lc0,c1:lc1,seg:8}); }
+      const lf=leafAt(base,pos,az,tilt,geo);
+      if(flower===6&&st>=2){ // petiole
+        const pet=new T.Mesh(new T.CylinderGeometry(0.018,0.026,0.4*sz,6),std(mk('#4f8f3a',w),.6)); pet.castShadow=true; pet.position.y=0.2*sz; lf.add(pet); geo.translate(0,0.38*sz,0);
+      }
+    }
+  }
+  // head
+  const hs=tbl(HEAD_TBL,h);
+  if(st>=2){
+    const head=st===2?headBud(flower,w):({3:headDaisy,4:headTulip,5:headCherry,6:headSun}[flower])(w);
+    const top=curve.getPoint(1), tan=curve.getTangent(1).normalize();
+    const holder=new T.Group(); holder.position.copy(top);
+    holder.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),tan);
+    const tiltF={3:0.1,4:0.0,5:0.3,6:0.62}[flower]+(st===2?-0.1:0)+w*0.5;
+    head.rotation.x=tiltF; head.scale.setScalar(hs*(st===2?0.9:1)*({3:1.2,4:0.78,5:1.05,6:1.2}[flower]));
+    if(flower===6){ head.position.y=0; }
+    holder.add(head); base.add(holder);
+  }
+  grp.userData.top=H;
+  return grp;
+}
+
+// ---------- scene state ----------
+let flower=3, h=0.93, wilt=0, view='single', plants=[], yaw=0.5, pitch=0.2, dist=9.6, auto=!reduce, t0=performance.now();
+const stage=document.getElementById('stage');
+function disposeGroup(g){g.traverse(o=>{if(o.geometry)o.geometry.dispose(); if(o.material&&o.material!==matV){(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose());}});}
+const shelfBoard=new T.Mesh(new T.BoxGeometry(14.5,0.35,2.6),std('#9a6b3c',.8)); shelfBoard.position.set(0,-0.18,0); shelfBoard.receiveShadow=true; shelfBoard.castShadow=true;
+function rebuild(){
+  plants.forEach(p=>{scene.remove(p);disposeGroup(p);}); plants=[];
+  if(view==='single'){
+    const p=buildPlant(flower,h,wilt); scene.add(p); plants.push(p); scene.remove(shelfBoard);
+  }else{
+    scene.add(shelfBoard);
+    [3,4,5,6].forEach((f,i)=>{const p=buildPlant(f,h,wilt); p.position.x=(i-1.5)*3.4; p.rotation.y=i*0.7; scene.add(p); plants.push(p);});
+  }
+  const si=stageIndex(h);
+  document.getElementById('badge').textContent = view==='single'?stageName(si,flower):'Plant shelf · '+['Seedlings','Sprouts','Buds','Small blooms','Blooms','Big blooms'][si];
+  layout();
+}
+function layout(){
+  const r=stage.getBoundingClientRect(); const W=Math.max(2,r.width),Hh=Math.max(2,r.height);
+  renderer.setSize(W,Hh,false); camera.aspect=W/Hh;
+  const need = view==='single'?11.2:20; const asp=W/Hh;
+  baseDist = need*(asp<1.2?1.2/asp*0.85:1);
+  camera.updateProjectionMatrix();
+}
+let baseDist=9.6, zoom=1;
+function frame(now){
+  const tt=(now-t0)/1000;
+  if(auto) yaw = view==='single' ? yaw+0.0028 : Math.sin(tt*0.35)*0.55;
+  const d=baseDist*zoom, cy=view==='single'?2.6:2.0;
+  camera.position.set(Math.sin(yaw)*Math.cos(pitch)*d, cy+Math.sin(pitch)*d*0.9, Math.cos(yaw)*Math.cos(pitch)*d);
+  camera.lookAt(0,cy,0);
+  if(!reduce) plants.forEach((p,i)=>{const s=(1-wilt)*0.012; p.rotation.z=Math.sin(tt*1.3+i)*s; p.rotation.x=Math.cos(tt*1.1+i)*s;});
+  renderer.render(scene,camera); requestAnimationFrame(frame);
+}
+// ---------- input ----------
+let drag=null, pts=new Map(), pinch0=0;
+stage.addEventListener('pointerdown',e=>{stage.setPointerCapture(e.pointerId); pts.set(e.pointerId,[e.clientX,e.clientY]); auto=false; drag=[e.clientX,e.clientY]; if(pts.size===2){const a=[...pts.values()]; pinch0=Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1]);}});
+stage.addEventListener('pointermove',e=>{
+  if(!pts.has(e.pointerId)) return; pts.set(e.pointerId,[e.clientX,e.clientY]);
+  if(pts.size===2){const a=[...pts.values()],d=Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1]); if(pinch0){zoom=Math.min(1.8,Math.max(0.55,zoom*pinch0/d));} pinch0=d; return;}
+  if(drag){yaw-= (e.clientX-drag[0])*0.008; pitch=Math.min(0.75,Math.max(-0.05,pitch+(e.clientY-drag[1])*0.005)); drag=[e.clientX,e.clientY];}
+});
+const up=e=>{pts.delete(e.pointerId); drag=pts.size?drag:null; pinch0=0;};
+stage.addEventListener('pointerup',up); stage.addEventListener('pointercancel',up);
+stage.addEventListener('wheel',e=>{e.preventDefault(); zoom=Math.min(1.8,Math.max(0.55,zoom*(1+e.deltaY*0.001)));},{passive:false});
+// ---------- UI ----------
+const flowersEl=document.getElementById('flowers'), stagesEl=document.getElementById('stages');
+Object.entries(FLOWERS).forEach(([k,n])=>{const b=document.createElement('button');b.type='button';b.textContent=n;b.dataset.f=k;b.setAttribute('aria-pressed',String(+k===flower));flowersEl.appendChild(b);});
+flowersEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;flower=+b.dataset.f;[...flowersEl.children].forEach(x=>x.setAttribute('aria-pressed',String(x===b)));if(view==='shelf')setView('single');else rebuild();});
+const labels=['Seedling','Sprout','Bud','Small','Flower','Big'];
+labels.forEach((n,i)=>{const b=document.createElement('button');b.type='button';b.textContent=n;b.dataset.i=i;stagesEl.appendChild(b);});
+stagesEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const i=+b.dataset.i;h=(THRESH[i]+THRESH[i+1])/2;growEl.value=Math.round(h*1000);rebuild();});
+const growEl=document.getElementById('grow'), wiltEl=document.getElementById('wilt');
+let pend=false; function sched(){ if(pend)return; pend=true; requestAnimationFrame(()=>{pend=false;rebuild();}); }
+growEl.addEventListener('input',()=>{h=Math.min(0.999,growEl.value/1000);sched();});
+wiltEl.addEventListener('input',()=>{wilt=wiltEl.value/100;sched();});
+function setView(v){view=v;[...document.getElementById('views').children].forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.v===v)));rebuild();}
+document.getElementById('views').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setView(b.dataset.v);});
+if('ResizeObserver' in window) new ResizeObserver(()=>layout()).observe(stage); else addEventListener('resize',layout);
+rebuild(); requestAnimationFrame(frame);
+window.__ready=true;
+})();
+</script>

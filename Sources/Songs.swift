@@ -598,13 +598,35 @@ enum ChartBuilder {
                     if made { slideCount += 1; continue }
                 }
 
-                // single slide: prefer a two-lane sweep towards the middle, then one lane either way
+                // single slide: long holds can sweep across several lanes (a vine needs about 0.35 s per
+                // lane crossed, so the finger never has to jump). The spans cycle 2, 3, 4... so slides
+                // vary, and a wide sweep is only used if every lane it crosses is free during the hold.
                 let mid = (lanes - 1) / 2
                 let toward = lane < mid ? 1 : (lane > mid ? -1 : (i % 2 == 0 ? 1 : -1))
-                for step in [2 * toward, 1 * toward, -1 * toward, -2 * toward] {
-                    let target = lane + step
-                    guard target >= 0, target < lanes, target != lane else { continue }
-                    if !busy(target, target, t0, t1, except: i) { out[i].endLane = target; slideCount += 1; break }
+                let maxSpan = min(lanes - 1, 1 + Int(out[i].dur / 0.35))
+                var spans = Array(1...max(1, maxSpan))
+                if maxSpan >= 2 {
+                    let pick = 2 + slideCount % (maxSpan - 1)          // 2...maxSpan
+                    spans = [pick] + spans.reversed().filter { $0 != pick }
+                }
+                var placed = false
+                for span in spans where span >= 2 {
+                    for dir in [toward, -toward] {
+                        let target = lane + span * dir
+                        guard target >= 0, target < lanes else { continue }
+                        if !busy(min(lane, target), max(lane, target), t0, t1, except: i) {
+                            out[i].endLane = target; slideCount += 1; placed = true; break
+                        }
+                    }
+                    if placed { break }
+                }
+                if !placed {
+                    // fall back to the original rule: a short sweep, only the target lane has to be free
+                    for step in [2 * toward, 1 * toward, -1 * toward, -2 * toward] {
+                        let target = lane + step
+                        guard target >= 0, target < lanes, target != lane else { continue }
+                        if !busy(target, target, t0, t1, except: i) { out[i].endLane = target; slideCount += 1; break }
+                    }
                 }
             }
             if !extra.isEmpty { out += extra; out.sort { $0.time < $1.time } }

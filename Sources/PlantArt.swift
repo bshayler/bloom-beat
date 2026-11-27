@@ -362,8 +362,22 @@ struct PlantPreview: View {
     var cycle = false
     var compact = false   // draw at menu proportions, scaled to fit small cells
     var flower = 3
+    var use3D = true      // false forces the 2D canvas
+    var still = false     // true shows a cached picture of the 3D plant instead of a live view (shelf grid)
 
     var body: some View {
+        if use3D && PlantRendering.effective {
+            if still {
+                PlantSnapshotView(health: health, wilt: wilt, flower: flower)
+            } else {
+                PlantSceneView(health: health, wilt: wilt, flower: flower, cycle: cycle)
+            }
+        } else {
+            canvasBody
+        }
+    }
+
+    private var canvasBody: some View {
         TimelineView(.animation) { tl in
             let t = tl.date.timeIntervalSinceReferenceDate
             Canvas { ctx, size in
